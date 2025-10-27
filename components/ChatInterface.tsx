@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import Message from './Message';
@@ -27,8 +28,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, isLoading }) =>
       ))}
       {isLoading && (
         <div className="flex justify-start">
-            <div className="bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg max-w-lg border-t border-purple-500/50">
+            <div className="flex items-center bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg max-w-lg border-t border-purple-500/50">
                 <Loader />
+                <span className="text-sm text-gray-400 ml-3 animate-pulse">Söker i minnet...</span>
             </div>
         </div>
       )}

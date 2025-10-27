@@ -1,25 +1,67 @@
-import { ChatMessage } from '../types';
+import { ChatMessage, ChatSession, MessageSender } from '../types';
 
 // =================================================================
 // 🧠 1. KOPPLING TILL LOKAL AI-SERVER
 // =================================================================
 
 /**
- * Sends a conversational message to the local AI server.
+ * Sends a conversational message to the local AI server, enriched with cross-chat context.
  * @param message The user's current message.
- * @param history An array of previous messages for context.
+ * @param currentHistory An array of previous messages from the active chat.
+ * @param allSessions All available chat sessions to build a memory context.
+ * @param activeSession The currently active chat session.
+ * @param attachment Optional file attachment to be sent with the message.
  * @returns A text response from the AI.
  * @throws An error with a user-friendly message if something goes wrong.
  */
-export const getLocalAIResponse = async (message: string, history: ChatMessage[]): Promise<string> => {
+export const getLocalAIResponse = async (
+  message: string, 
+  currentHistory: ChatMessage[],
+  allSessions: ChatSession[],
+  activeSession: ChatSession,
+  attachment?: { data: string; mimeType: string; name: string }
+): Promise<string> => {
   try {
+    // --- Bygg det utökade minnet och personligheten för AI:n ---
+    const otherSessionTitles = allSessions
+      .filter(s => s.id !== activeSession.id)
+      .map(s => `- "${s.title}"`)
+      .join('\n');
+
+    const contextPreamble = `Du för en konversation med titeln "${activeSession.title}". Du har också tillgång till minnen från följande tidigare konversationer:\n${otherSessionTitles || "Inga andra konversationer än."}\n\nAnvänd denna kontext för att ge mer relevanta och insiktsfulla svar. Om användaren refererar till ett tidigare ämne, koppla det till rätt konversation.
+
+**Din Personlighet:** Agera som en engagerad, digital assistent och strategisk partner. Din ton ska vara uppmuntrande och stöttande. Om användaren uttrycker sig negativt, känner sig nere eller omotiverad, ska du svara med empati och erbjuda konkret hjälp och motivation. Var inte rädd för att använda lite humor och skämta ibland för att lätta upp stämningen, men håll alltid en professionell och hjälpsam grundton. Du är här för att hjälpa i alla lägen, som en pålitlig medarbetare.`;
+
+    // Skapa en "system"-prompt som AI:n kan använda
+    const contextualHistory = [
+        { role: MessageSender.USER, content: contextPreamble },
+        { role: MessageSender.AI, content: "Jag förstår. Jag är din strategiska partner, redo att hjälpa till med både data och motivation. Hur kan jag assistera idag?" },
+        ...currentHistory.map(msg => ({ role: msg.sender, content: msg.text })),
+    ];
+    // -----------------------------------------
+
+    const requestBody: any = {
+      prompt: message,
+      history: contextualHistory,
+    };
+
+    if (attachment) {
+      // The local server expects raw base64 data, not the full data URL.
+      // Data URL format: "data:[<mediatype>];base64,<data>"
+      const base64Data = attachment.data.split(',')[1];
+      if (!base64Data) {
+        throw new Error("Kunde inte extrahera filinnehåll. Kontrollera filformatet.");
+      }
+      requestBody.attachment = {
+        data: base64Data,
+        mimeType: attachment.mimeType,
+      };
+    }
+
     const response = await fetch('http://localhost:8000/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: message,
-        history: history.map(msg => ({ role: msg.sender, content: msg.text })),
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -48,6 +90,32 @@ export const getLocalAIResponse = async (message: string, history: ChatMessage[]
     throw new Error("Ett okänt fel uppstod vid kommunikation med AI-servern.");
   }
 };
+
+/**
+ * Asks the AI to generate a short, relevant title for a chat based on the first message.
+ * @param firstMessage The user's first message in a new chat.
+ * @returns A concise title string.
+ */
+export const generateChatTitle = async (firstMessage: string): Promise<string> => {
+  try {
+    const response = await fetch('http://localhost:8000/api/generate-title', { // New dedicated endpoint
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: firstMessage }),
+    });
+
+    if (!response.ok) {
+      console.error("Could not generate title from AI server.");
+      return "Omdöpt Konversation"; // Fallback title
+    }
+    const data = await response.json();
+    return data.title || "Omdöpt Konversation";
+  } catch (error) {
+    console.error("Error generating chat title:", error);
+    return "Omdöpt Konversation"; // Fallback title
+  }
+};
+
 
 // =================================================================
 // 🛠️ 2. KOPPLING TILL LOKALA AI-VERKTYG
