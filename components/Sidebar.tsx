@@ -1,24 +1,22 @@
 import React from 'react';
+import { AITool } from '../services/geminiService';
 
 interface SidebarProps {
   onPromptClick: (prompt: string) => void;
+  onToolClick: (tool: AITool, promptText: string) => void;
 }
 
-const PromptButton: React.FC<{ text: string; icon?: string; onClick: () => void }> = ({ text, icon, onClick }) => (
+const PromptButton: React.FC<{ text: string; icon?: string; onClick: () => void; isTool?: boolean }> = ({ text, icon, onClick, isTool = false }) => (
     <button
       onClick={onClick}
-      className="group w-full text-left text-sm p-3 bg-white/5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center relative overflow-hidden"
+      className="group w-full text-left text-sm p-3 bg-white/5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center border border-white/10 hover:border-purple-400/80 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500/10"
     >
-      <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-purple-500/50 to-cyan-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-      <div className="absolute top-0 left-0 h-full w-1 bg-purple-400 transform -translate-x-2 group-hover:translate-x-0 transition-transform duration-300"></div>
-      
-      {icon && <i className={`${icon} w-6 text-center mr-2 text-purple-400 group-hover:text-cyan-300 transition-colors duration-300 z-10`}></i>}
+      {icon && <i className={`${icon} w-6 text-center mr-2 ${isTool ? 'text-cyan-400' : 'text-purple-400'} group-hover:text-cyan-300 transition-all duration-300 group-hover:drop-shadow-[0_0_5px_#22d3ee] group-hover:scale-125 group-hover:-rotate-6`}></i>}
       <span className="z-10">{text}</span>
     </button>
   );
 
-
-const Sidebar: React.FC<SidebarProps> = ({ onPromptClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
   const keyInsightsPrompts = [
     { text: "Vilka spel presterar bäst just nu?", icon: "fa-solid fa-gamepad" },
     { text: "Vad driver mest engagemang i mina videor?", icon: "fa-solid fa-fire" },
@@ -26,9 +24,18 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick }) => {
   ];
 
   const toolPrompts = [
-    { text: "Skapa hashtags för 'Helldivers 2'", icon: "fa-solid fa-hashtag" },
-    { text: "Skriv en beskrivning för en video om 'Generation Zero i Stockholm'", icon: "fa-solid fa-pencil" },
-    { text: "Analysera min idé: 'En challenge i Deep Rock'", icon: "fa-solid fa-lightbulb" },
+    { 
+      text: "Transkribera video från URL", 
+      icon: "fa-solid fa-closed-captioning", 
+      tool: 'transcribe' as AITool, 
+      promptText: "Ange YouTube-videons URL:" 
+    },
+    { 
+      text: "Översätt text till engelska", 
+      icon: "fa-solid fa-language", 
+      tool: 'translate' as AITool,
+      promptText: "Ange texten du vill översätta:"
+    },
   ];
   
   const conversationStarters = [
@@ -37,9 +44,9 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick }) => {
   ];
 
   return (
-    <aside className="w-64 md:w-80 h-full bg-black/20 backdrop-blur-md border-r border-purple-500/20 p-4 flex-col hidden sm:flex overflow-y-auto">
+    <aside className="w-64 md:w-80 h-full bg-gray-950/50 backdrop-blur-md border-r border-purple-500/20 p-4 flex-col hidden sm:flex overflow-y-auto">
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow">
+        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
           <i className="fa-solid fa-chart-line mr-2"></i>
           Dynamiska Insikter
         </h2>
@@ -51,19 +58,25 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick }) => {
       </div>
 
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow">
+        <h2 className="text-lg font-semibold mb-4 text-cyan-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
           <i className="fa-solid fa-toolbox mr-2"></i>
-          Verktygslåda
+          AI-Verktyg
         </h2>
         <div className="space-y-3">
           {toolPrompts.map((prompt, index) => (
-            <PromptButton key={index} text={prompt.text} icon={prompt.icon} onClick={() => onPromptClick(prompt.text)} />
+            <PromptButton 
+              key={index} 
+              text={prompt.text} 
+              icon={prompt.icon} 
+              onClick={() => onToolClick(prompt.tool, prompt.promptText)}
+              isTool={true}
+            />
           ))}
         </div>
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow">
+        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
           <i className="fa-solid fa-comments mr-2"></i>
           Kreativa Startare
         </h2>

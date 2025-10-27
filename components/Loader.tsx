@@ -1,12 +1,20 @@
-
 import React from 'react';
 
 const Loader: React.FC = () => {
   return (
-    <div className="flex items-center space-x-2">
-      <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:-0.3s]"></div>
-      <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse [animation-delay:-0.15s]"></div>
-      <div className="w-2 h-2 rounded-full bg-gray-400 animate-pulse"></div>
+    <div className="flex items-center space-x-2 py-1">
+      <div 
+        className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-typing-wave"
+        style={{ animationDelay: '0s' }}
+      ></div>
+      <div 
+        className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-typing-wave"
+        style={{ animationDelay: '0.3s' }}
+      ></div>
+      <div 
+        className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-typing-wave"
+        style={{ animationDelay: '0.6s' }}
+      ></div>
     </div>
   );
 };

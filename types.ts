@@ -8,4 +8,5 @@ export interface ChatMessage {
   id: string;
   text: string;
   sender: MessageSender;
+  isError?: boolean;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChatMessage, MessageSender } from './types';
-import { getLocalAIResponse } from './services/geminiService';
+import { getLocalAIResponse, executeAITool, AITool } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -10,7 +10,6 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Send an initial welcome message from the AI
     const welcomeMessage: ChatMessage = {
       id: 'initial-welcome',
       sender: MessageSender.AI,
@@ -30,7 +29,6 @@ const App: React.FC = () => {
     };
 
     const history = messages;
-
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
@@ -43,10 +41,12 @@ const App: React.FC = () => {
       };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
+      const errorMessageText = error instanceof Error ? error.message : "Ett okänt fel inträffade.";
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         sender: MessageSender.AI,
-        text: "Ledsen, jag kunde inte ansluta till AI-hjärnan. Kontrollera din anslutning och försök igen.",
+        text: `**🛑 Oj, något gick fel!**\n\n${errorMessageText}`,
+        isError: true,
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -54,16 +54,51 @@ const App: React.FC = () => {
     }
   };
   
+  const handleExecuteTool = async (tool: AITool, promptText: string, params: Record<string, any> = {}) => {
+    const input = window.prompt(promptText);
+    if (!input) return;
+
+    const toolMessage: ChatMessage = {
+        id: `tool-${Date.now()}`,
+        sender: MessageSender.USER,
+        text: `[Verktyg anropat: ${tool}]\nInput: \`${input}\``,
+    };
+
+    setMessages(prev => [...prev, toolMessage]);
+    setIsLoading(true);
+
+    try {
+        const toolResultText = await executeAITool(tool, { ...params, input });
+        const resultMessage: ChatMessage = {
+            id: `ai-${Date.now()}`,
+            sender: MessageSender.AI,
+            text: `**✅ Resultat från verktyget '${tool}':**\n\n${toolResultText}`,
+        };
+        setMessages(prev => [...prev, resultMessage]);
+    } catch (error) {
+        const errorMessageText = error instanceof Error ? error.message : "Ett okänt fel inträffade.";
+        const errorMessage: ChatMessage = {
+            id: `error-${Date.now()}`,
+            sender: MessageSender.AI,
+            text: `**🛑 Oj, verktyget misslyckades!**\n\n${errorMessageText}`,
+            isError: true,
+        };
+        setMessages(prev => [...prev, errorMessage]);
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
   const handlePromptClick = (prompt: string) => {
     handleSendMessage(prompt);
   };
 
   return (
-    <div className="flex h-screen bg-black/30 text-gray-200">
-      <Sidebar onPromptClick={handlePromptClick} />
+    <div className="flex h-screen text-gray-200">
+      <Sidebar onPromptClick={handlePromptClick} onToolClick={handleExecuteTool} />
       <div className="flex flex-col flex-1">
-        <header className="bg-black/30 backdrop-blur-xl border-b border-purple-500/30 p-4 shadow-lg z-10">
-          <h1 className="text-xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
+        <header className="bg-gray-950/60 backdrop-blur-xl border-b border-purple-500/30 p-4 shadow-[0_4px_15px_-5px_rgba(168,85,247,0.4)] z-10">
+          <h1 className="text-xl font-bold text-center text-shimmer" style={{ fontFamily: 'var(--font-heading)' }}>
             <i className="fa-solid fa-brain mr-2 text-glow"></i>
             YouTube AI-Assistent
           </h1>
