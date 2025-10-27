@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "marked": "https://aistudiocdn.com/marked@^16.4.1",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+<style>
+    :root {
+      --glow-color: #a855f7; /* Purple-500 */
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #030712; /* Gray-950 as base */
+        overflow: hidden;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.15) 0%, transparent 30%),
+                          radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
+        animation: pulse-aurora 20s infinite alternate;
+        z-index: -1;
+    }
+    
+    @keyframes pulse-aurora {
+        0% { opacity: 0.8; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.1); }
+        100% { opacity: 0.8; transform: scale(1); }
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #111827; /* Gray-900 */
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #4f46e5; /* Indigo-600 */
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #6366f1; /* Indigo-500 */
+    }
+
+    .text-glow {
+        text-shadow: 0 0 8px var(--glow-color), 0 0 20px rgba(168, 85, 247, 0.5);
+    }
+</style>
+</head>
+<body class="bg-gray-950 text-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

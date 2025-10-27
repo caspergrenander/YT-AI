@@ -1,0 +1,5 @@
+{
+  "name": "YouTube AI Assistant",
+  "description": "An interactive web interface to chat with your personal YouTube AI strategist. Get data-driven insights, brainstorm ideas, and optimize your content based on your channel's performance.",
+  "requestFramePermissions": []
+}
