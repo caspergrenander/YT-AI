@@ -11,6 +11,8 @@ const App: React.FC = () => {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); // For initial load
   const [isResponding, setIsResponding] = useState<boolean>(false); // For AI responses
+  const [isProcessingTask, setIsProcessingTask] = useState<boolean>(false); // For background tasks
+  const [processingTaskMessage, setProcessingTaskMessage] = useState<string>(''); // Message for the task
   const [startRenamingId, setStartRenamingId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<ChatSession | null>(null);
 
@@ -88,7 +90,7 @@ const App: React.FC = () => {
   };
 
   const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string; name: string }) => {
-    if (!activeChatId || isResponding) return;
+    if (!activeChatId || isResponding || isProcessingTask) return;
 
     let currentChat = activeChat;
     if (!currentChat) {
@@ -140,12 +142,14 @@ const App: React.FC = () => {
     const aiMessage = chat.messages[aiMessageIndex];
     if (!aiMessage || aiMessageIndex === 0) return;
     
-    // The user message with the attachment should be right before the AI's response
     const userMessage = chat.messages[aiMessageIndex - 1];
     if (!userMessage || !userMessage.attachment) {
        updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: "Kunde inte hitta den ursprungliga filen att ladda upp. Försök igen.", isError: true }]);
        return;
     }
+    
+    setIsProcessingTask(true);
+    setProcessingTaskMessage(`Laddar upp "${userMessage.attachment?.name}" till Google Drive...`);
 
     try {
       const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
@@ -154,8 +158,6 @@ const App: React.FC = () => {
       }
       const metadata = JSON.parse(metadataMatch[1]);
       
-      updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `Startar uppladdning av "${userMessage.attachment?.name}" till Google Drive...`}]);
-      
       const responseMessage = await uploadToDrive(userMessage.attachment, metadata);
       
       updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${responseMessage}`}]);
@@ -163,11 +165,15 @@ const App: React.FC = () => {
     } catch (error) {
       const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid uppladdning.";
       updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Uppladdningen misslyckades: ${errorText}`, isError: true }]);
+    } finally {
+        setIsProcessingTask(false);
+        setProcessingTaskMessage('');
     }
   };
 
   const handleImproveVideo = async (chatId: string, videoId: string) => {
-    updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `🤖 Startar autonom förbättringsprocess för video [${videoId}]...`}]);
+    setIsProcessingTask(true);
+    setProcessingTaskMessage(`🤖 Startar autonom förbättringsprocess för video [${videoId}]...`);
     
     try {
         const responseMessage = await improveVideo(videoId);
@@ -175,6 +181,9 @@ const App: React.FC = () => {
     } catch (error) {
         const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid videoförbättringen.";
         updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Förbättringen misslyckades: ${errorText}`, isError: true }]);
+    } finally {
+        setIsProcessingTask(false);
+        setProcessingTaskMessage('');
     }
   };
 
@@ -202,7 +211,7 @@ const App: React.FC = () => {
   
   const handleRegenerate = async (chatId: string, messageId: string) => {
       const chat = chatSessions.find(c => c.id === chatId);
-      if (!chat || isResponding) return;
+      if (!chat || isResponding || isProcessingTask) return;
       
       const messageIndex = chat.messages.findIndex(m => m.id === messageId);
       if (messageIndex < 1) return; // Cannot regenerate the very first message or non-existent messages
@@ -295,9 +304,11 @@ const App: React.FC = () => {
     );
   }
 
+  const anyLoading = isResponding || isProcessingTask;
+
   return (
     <div className="flex h-screen max-h-screen bg-gray-900 text-gray-100">
-      <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} />
+      <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} disabled={anyLoading}/>
       <main className="flex-1 flex flex-col relative">
           <header className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
               <ChatSelector 
@@ -326,6 +337,7 @@ const App: React.FC = () => {
                 onUploadToDrive={handleUploadToDrive}
                 onImproveVideo={handleImproveVideo}
                 isReadOnly={!!sharedSession}
+                isProcessingTask={isProcessingTask}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center">
@@ -334,7 +346,13 @@ const App: React.FC = () => {
               </div>
             </div>
           )}
-          <InputBar onSendMessage={handleSendMessage} isLoading={isResponding} />
+          {isProcessingTask && (
+            <div className="px-4 py-2 bg-gray-950/60 backdrop-blur-xl border-t border-purple-500/30 flex items-center justify-center space-x-3 text-cyan-300 animate-pulse">
+              <i className="fa-solid fa-cog fa-spin"></i>
+              <span>{processingTaskMessage}</span>
+            </div>
+          )}
+          <InputBar onSendMessage={handleSendMessage} isLoading={anyLoading} />
       </main>
     </div>
   );

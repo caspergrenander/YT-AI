@@ -4,19 +4,21 @@ import { AITool } from '../services/geminiService';
 interface SidebarProps {
   onPromptClick: (prompt: string) => void;
   onToolClick: (tool: AITool, promptText: string) => void;
+  disabled: boolean;
 }
 
-const PromptButton: React.FC<{ text: string; icon?: string; onClick: () => void; isTool?: boolean }> = ({ text, icon, onClick, isTool = false }) => (
+const PromptButton: React.FC<{ text: string; icon?: string; onClick: () => void; isTool?: boolean, disabled: boolean }> = ({ text, icon, onClick, isTool = false, disabled }) => (
     <button
       onClick={onClick}
-      className="group w-full text-left text-sm p-3 bg-white/5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center border border-white/10 hover:border-purple-400/80 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500/10"
+      disabled={disabled}
+      className="group w-full text-left text-sm p-3 bg-white/5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center border border-white/10 hover:border-purple-400/80 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-white/10 disabled:hover:shadow-none disabled:hover:bg-white/5"
     >
       {icon && <i className={`${icon} w-6 text-center mr-2 ${isTool ? 'text-cyan-400' : 'text-purple-400'} group-hover:text-cyan-300 transition-all duration-300 group-hover:drop-shadow-[0_0_5px_#22d3ee] group-hover:scale-125 group-hover:-rotate-6`}></i>}
       <span className="z-10">{text}</span>
     </button>
   );
 
-const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick, disabled }) => {
   const keyInsightsPrompts = [
     { text: "Analysera senaste videons prestanda", icon: "fa-solid fa-magnifying-glass-chart" },
     { text: "Vilka spel presterar bäst just nu?", icon: "fa-solid fa-gamepad" },
@@ -65,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
         </h2>
         <div className="space-y-3">
           {keyInsightsPrompts.map((prompt, index) => (
-            <PromptButton key={index} text={prompt.text} icon={prompt.icon} onClick={() => onPromptClick(prompt.text)} />
+            <PromptButton key={index} text={prompt.text} icon={prompt.icon} onClick={() => onPromptClick(prompt.text)} disabled={disabled} />
           ))}
         </div>
       </div>
@@ -83,6 +85,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
               icon={prompt.icon} 
               onClick={() => onToolClick(prompt.tool, prompt.promptText)}
               isTool={true}
+              disabled={disabled}
             />
           ))}
         </div>
@@ -95,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
         </h2>
         <div className="space-y-3">
           {conversationStarters.map((prompt, index) => (
-            <PromptButton key={index} text={prompt} icon="fa-solid fa-sparkles" onClick={() => onPromptClick(prompt)} />
+            <PromptButton key={index} text={prompt} icon="fa-solid fa-sparkles" onClick={() => onPromptClick(prompt)} disabled={disabled} />
           ))}
         </div>
       </div>

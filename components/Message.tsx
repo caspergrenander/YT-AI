@@ -10,6 +10,7 @@ interface MessageProps {
   onUploadToDrive: (chatId: string, messageId: string) => void;
   onImproveVideo: (chatId: string, videoId: string) => void;
   isReadOnly?: boolean;
+  isProcessingTask: boolean;
 }
 
 const MessageInteractionButton: React.FC<{ icon: string; label: string; onClick: () => void; isActive?: boolean }> = ({ icon, label, onClick, isActive }) => (
@@ -24,7 +25,7 @@ const MessageInteractionButton: React.FC<{ icon: string; label: string; onClick:
 );
 
 
-const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, onImproveVideo, isReadOnly = false }) => {
+const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, onImproveVideo, isReadOnly = false, isProcessingTask }) => {
   const { sender, text, isError, attachment, feedback } = message;
   const isUser = sender === MessageSender.USER;
   const isToolCall = isUser && text.startsWith('[Verktyg anropat:');
@@ -159,7 +160,8 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
           <div className="absolute bottom-2 right-0 mr-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
               <button
                 onClick={() => onImproveVideo(chatId, improvementData.videoId)}
-                className="group flex items-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 pulse-btn-glow"
+                disabled={isProcessingTask}
+                className="group flex items-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 pulse-btn-glow disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:from-cyan-500 disabled:hover:to-blue-500 disabled:hover:scale-100"
                 style={{ '--glow-color': '#22d3ee' } as React.CSSProperties}
               >
                   <i className="fa-solid fa-wand-magic-sparkles mr-2 transition-transform duration-300 group-hover:rotate-12"></i>
@@ -171,7 +173,8 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
           <div className="absolute bottom-2 right-0 mr-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
               <button
                 onClick={() => onUploadToDrive(chatId, message.id)}
-                className="group flex items-center bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 pulse-btn-glow"
+                disabled={isProcessingTask}
+                className="group flex items-center bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 pulse-btn-glow disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:from-green-500 disabled:hover:to-cyan-500 disabled:hover:scale-100"
                 style={{ '--glow-color': '#22d3ee' } as React.CSSProperties}
               >
                   <i className="fa-solid fa-cloud-arrow-up mr-2 transition-transform duration-300 group-hover:-translate-y-0.5"></i>
