@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChatMessage, MessageSender } from '../types';
 import { marked } from 'marked';
 
@@ -7,6 +7,7 @@ interface MessageProps {
   message: ChatMessage;
   onRegenerate: (chatId: string, messageId: string) => void;
   onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
+  onUploadToDrive: (chatId: string, messageId: string) => void;
   isReadOnly?: boolean;
 }
 
@@ -22,19 +23,47 @@ const MessageInteractionButton: React.FC<{ icon: string; label: string; onClick:
 );
 
 
-const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, isReadOnly = false }) => {
+const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, isReadOnly = false }) => {
   const { sender, text, isError, attachment, feedback } = message;
   const isUser = sender === MessageSender.USER;
   const isToolCall = isUser && text.startsWith('[Verktyg anropat:');
   const [isCopied, setIsCopied] = useState(false);
+  const [uploadMetadata, setUploadMetadata] = useState<any | null>(null);
 
-  const createMarkup = (text: string) => {
-    const rawMarkup = marked.parse(text, { breaks: true, gfm: true });
+  useEffect(() => {
+    if (sender === MessageSender.AI && text.includes('"readyForUpload": true')) {
+      try {
+        const match = text.match(/```json\n([\s\S]*?)\n```/);
+        if (match && match[1]) {
+          const parsed = JSON.parse(match[1]);
+          if (parsed.readyForUpload) {
+            setUploadMetadata(parsed);
+          } else {
+            setUploadMetadata(null);
+          }
+        } else {
+            setUploadMetadata(null);
+        }
+      } catch (e) {
+        console.error("Failed to parse upload metadata JSON", e);
+        setUploadMetadata(null);
+      }
+    } else {
+      setUploadMetadata(null);
+    }
+  }, [text, sender]);
+
+
+  const createMarkup = (rawText: string) => {
+    // Remove the metadata block from the displayed text
+    const cleanText = rawText.replace(/```json\n([\s\S]*?)\n```/, '').trim();
+    const rawMarkup = marked.parse(cleanText, { breaks: true, gfm: true });
     return { __html: rawMarkup };
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(text).then(() => {
+    const cleanText = text.replace(/```json\n([\s\S]*?)\n```/, '').trim();
+    navigator.clipboard.writeText(cleanText).then(() => {
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 2000);
     });
@@ -57,7 +86,8 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
   const aiGlowClass = !isUser && message.id !== 'initial-welcome' && !message.isError ? 'ai-message-glow' : '';
 
   const canInteract = !isUser && !isError && message.id !== 'initial-welcome' && !isReadOnly;
-  const containerPadding = canInteract ? 'pb-8' : '';
+  const hasUploadAction = uploadMetadata && !isReadOnly;
+  const containerPadding = (canInteract || hasUploadAction) ? 'pb-12' : '';
 
   return (
     <div className={`${containerClasses} message-enter group relative ${containerPadding}`}>
@@ -120,6 +150,18 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
                 isActive={feedback === 'disliked'}
             />
         </div>
+      )}
+      {hasUploadAction && (
+          <div className="absolute bottom-2 right-0 mr-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => onUploadToDrive(chatId, message.id)}
+                className="group flex items-center bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-400 hover:to-cyan-400 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 pulse-btn-glow"
+                style={{ '--glow-color': '#22d3ee' } as React.CSSProperties}
+              >
+                  <i className="fa-solid fa-cloud-arrow-up mr-2 transition-transform duration-300 group-hover:-translate-y-0.5"></i>
+                  Skicka till Drive
+              </button>
+          </div>
       )}
     </div>
   );

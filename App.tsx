@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChatMessage, MessageSender, ChatSession } from './types';
-import { getLocalAIResponse, executeAITool, AITool, generateChatTitle } from './services/geminiService';
+import { getLocalAIResponse, executeAITool, AITool, generateChatTitle, uploadToDrive } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -9,337 +9,320 @@ import ChatSelector from './components/ChatSelector';
 const App: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isRegenerating, setIsRegenerating] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // For initial load
+  const [isResponding, setIsResponding] = useState<boolean>(false); // For AI responses
   const [startRenamingId, setStartRenamingId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<ChatSession | null>(null);
+
+  const LOCAL_STORAGE_KEY = 'casper-autopilot-chats';
 
   // Load chats from localStorage or URL hash on initial render
   useEffect(() => {
     try {
       const hash = window.location.hash;
       if (hash.startsWith('#share=')) {
-          const encodedData = hash.substring(7); // Remove '#share='
-          const jsonString = atob(encodedData);
-          const sessionData = JSON.parse(jsonString) as ChatSession;
-          setSharedSession(sessionData);
-          setIsLoading(false);
-          return; // Stop further execution to stay in share mode
-      }
-
-      const savedSessions = localStorage.getItem('chatSessions');
-      const savedActiveId = localStorage.getItem('activeChatId');
-      
-      if (savedSessions) {
-        const sessions = JSON.parse(savedSessions);
-        if (sessions.length > 0) {
-            setChatSessions(sessions);
-            const activeId = savedActiveId ? JSON.parse(savedActiveId) : sessions[0].id;
-            setActiveChatId(sessions.some(s => s.id === activeId) ? activeId : sessions[0].id);
-        } else {
-             handleNewChat();
-        }
+        const encodedData = hash.substring(7);
+        const jsonString = atob(encodedData);
+        const sessionData = JSON.parse(jsonString) as ChatSession;
+        setSharedSession(sessionData);
+        setChatSessions([sessionData]);
+        setActiveChatId(sessionData.id);
       } else {
-        handleNewChat();
+        const savedChats = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedChats) {
+          const parsedChats = JSON.parse(savedChats);
+          if (parsedChats.length > 0) {
+            setChatSessions(parsedChats);
+            setActiveChatId(parsedChats[0].id);
+          } else {
+            handleNewChat(false); // Create a new chat if storage is empty
+          }
+        } else {
+          handleNewChat(false); // Create a new chat on first visit
+        }
       }
     } catch (error) {
-      console.error("Failed to load session from hash or localStorage", error);
-      if (window.location.hash) {
-          window.location.hash = ''; // Clear corrupted hash
-      }
-      handleNewChat();
+      console.error("Failed to load session:", error);
+      handleNewChat(false); // Start fresh if loading fails
     } finally {
-        if (!window.location.hash.startsWith('#share=')) {
-            setIsLoading(false);
-        }
+      setIsLoading(false);
     }
   }, []);
 
   // Save chats to localStorage whenever they change
   useEffect(() => {
-    if (!isLoading && chatSessions.length > 0 && !sharedSession) {
-      localStorage.setItem('chatSessions', JSON.stringify(chatSessions));
+    if (!sharedSession) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(chatSessions));
     }
-    if (activeChatId && !sharedSession) {
-      localStorage.setItem('activeChatId', JSON.stringify(activeChatId));
-    }
-  }, [chatSessions, activeChatId, isLoading, sharedSession]);
-
+  }, [chatSessions, sharedSession]);
+  
   const activeChat = useMemo(() => {
-    return chatSessions.find(session => session.id === activeChatId);
+    return chatSessions.find(c => c.id === activeChatId) ?? null;
   }, [chatSessions, activeChatId]);
-
-  const updateChatSession = (chatId: string, updatedMessages: ChatMessage[], newTitle?: string) => {
+  
+  const updateChatMessages = (chatId: string, messages: ChatMessage[] | ((prevMessages: ChatMessage[]) => ChatMessage[])) => {
     setChatSessions(prevSessions =>
       prevSessions.map(session =>
         session.id === chatId
-          ? { ...session, messages: updatedMessages, title: newTitle || session.title }
+          ? { ...session, messages: typeof messages === 'function' ? messages(session.messages) : messages }
           : session
       )
     );
   };
   
-  const handleNewChat = () => {
+  const handleNewChat = (activate: boolean = true) => {
     const newChat: ChatSession = {
-      id: `session-${Date.now()}`,
+      id: `chat-${Date.now()}`,
       title: "Ny Konversation",
       messages: [{
         id: 'initial-welcome',
         sender: MessageSender.AI,
-        text: "Hej! Jag är din lokala AI-hjärna, Casper_AutoPilot. Jag kör helt offline på din dator. Hur kan vi optimera ditt YouTube-innehåll idag?",
-      }]
+        text: "Hej! Jag är din lokala AI-kollega, Casper. Hur kan vi tillsammans krossa dina YouTube-mål idag? Ladda upp en fil eller ställ en fråga för att komma igång!",
+      }],
     };
     setChatSessions(prev => [newChat, ...prev]);
-    setActiveChatId(newChat.id);
-    setStartRenamingId(newChat.id);
-  };
-
-  const handleRenameChat = (id: string, newTitle: string) => {
-    if (!newTitle.trim()) return;
-    setChatSessions(prev =>
-      prev.map(session =>
-        session.id === id ? { ...session, title: newTitle.trim() } : session
-      )
-    );
-  };
-
-  const handleDeleteChat = (idToDelete: string) => {
-    const originalIndex = chatSessions.findIndex(s => s.id === idToDelete);
-    const updatedSessions = chatSessions.filter(s => s.id !== idToDelete);
-  
-    if (updatedSessions.length === 0) {
-      handleNewChat();
-    } else {
-      setChatSessions(updatedSessions);
-      if (activeChatId === idToDelete) {
-        const newActiveIndex = Math.max(0, originalIndex - 1);
-        setActiveChatId(updatedSessions[newActiveIndex].id);
-      }
+    if (activate) {
+      setActiveChatId(newChat.id);
     }
-  };
-  
-  const handleShareChat = (chatId: string) => {
-    const sessionToShare = chatSessions.find(s => s.id === chatId);
-    if (sessionToShare) {
-        try {
-            const jsonString = JSON.stringify(sessionToShare);
-            const encodedData = btoa(jsonString); // Base64 encode
-            const shareUrl = `${window.location.origin}${window.location.pathname}#share=${encodedData}`;
-            navigator.clipboard.writeText(shareUrl);
-            // Visual feedback is handled in ChatSelector
-        } catch (error) {
-            console.error("Failed to create share link:", error);
-            alert("Kunde inte skapa delningslänk. Konversationen kan vara för stor.");
-        }
-    }
+    return newChat;
   };
 
   const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string; name: string }) => {
-    if ((!text.trim() && !attachment) || !activeChat) return;
+    if (!activeChatId || isResponding) return;
 
-    const userMessage: ChatMessage = { 
-        id: `user-${Date.now()}`, 
-        sender: MessageSender.USER, 
-        text,
-        attachment, 
-    };
-    const currentMessages = [...activeChat.messages, userMessage];
-    updateChatSession(activeChat.id, currentMessages);
-    setIsLoading(true);
+    let currentChat = activeChat;
+    if (!currentChat) {
+      currentChat = handleNewChat();
+    }
     
-    const isFirstUserMessage = activeChat.messages.filter(m => m.sender === MessageSender.USER).length === 0;
+    const userMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      sender: MessageSender.USER,
+      text,
+      attachment,
+    };
+    updateChatMessages(currentChat.id, prev => [...prev, userMessage]);
+    setIsResponding(true);
 
     try {
-      if (isFirstUserMessage && activeChat.title === "Ny Konversation") {
-        const titlePrompt = text || `Analysera filen: ${attachment?.name}`;
-        const newTitle = await generateChatTitle(titlePrompt);
-        setChatSessions(prev => prev.map(s => s.id === activeChat.id ? { ...s, title: newTitle } : s));
+      const aiResponseText = await getLocalAIResponse(text, currentChat.messages, chatSessions, currentChat, attachment);
+      const aiMessage: ChatMessage = {
+        id: `msg-${Date.now() + 1}`,
+        sender: MessageSender.AI,
+        text: aiResponseText,
+      };
+      updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
+      
+      // Auto-rename chat if it's the first user message
+      if (currentChat.messages.length <= 2 && currentChat.title === "Ny Konversation") {
+        const newTitle = await generateChatTitle(text || `Analys av ${attachment?.name}`);
+        handleRenameChat(currentChat.id, newTitle);
       }
 
-      const aiResponseText = await getLocalAIResponse(text, activeChat.messages, chatSessions, activeChat, attachment);
-      const aiMessage: ChatMessage = { id: `ai-${Date.now()}`, sender: MessageSender.AI, text: aiResponseText };
-      updateChatSession(activeChat.id, [...currentMessages, aiMessage]);
     } catch (error) {
-      const errorMessageText = error instanceof Error ? error.message : "Ett okänt fel inträffade.";
       const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
+        id: `err-${Date.now()}`,
         sender: MessageSender.AI,
-        text: `**🛑 Oj, något gick fel!**\n\n${errorMessageText}`,
+        text: error instanceof Error ? error.message : "Ett okänt fel uppstod.",
         isError: true,
       };
-      updateChatSession(activeChat.id, [...currentMessages, errorMessage]);
+      updateChatMessages(currentChat.id, prev => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setIsResponding(false);
     }
   };
 
-  const handleExecuteTool = async (tool: AITool, promptText: string, params: Record<string, any> = {}) => {
-    if (!activeChat) return;
-    const input = window.prompt(promptText);
-    if (!input) return;
+  const handleUploadToDrive = async (chatId: string, messageId: string) => {
+    const chat = chatSessions.find(c => c.id === chatId);
+    if (!chat) return;
 
-    const toolMessage: ChatMessage = {
-        id: `tool-${Date.now()}`,
-        sender: MessageSender.USER,
-        text: `[Verktyg anropat: ${tool}]\nInput: \`${input}\``,
-    };
-    const currentMessages = [...activeChat.messages, toolMessage];
-    updateChatSession(activeChat.id, currentMessages);
-    setIsLoading(true);
+    const aiMessageIndex = chat.messages.findIndex(m => m.id === messageId);
+    const aiMessage = chat.messages[aiMessageIndex];
+    if (!aiMessage || aiMessageIndex === 0) return;
+    
+    // The user message with the attachment should be right before the AI's response
+    const userMessage = chat.messages[aiMessageIndex - 1];
+    if (!userMessage || !userMessage.attachment) {
+       updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: "Kunde inte hitta den ursprungliga filen att ladda upp. Försök igen.", isError: true }]);
+       return;
+    }
 
     try {
-        const toolResultText = await executeAITool(tool, { ...params, input });
-        const resultMessage: ChatMessage = {
-            id: `ai-${Date.now()}`,
-            sender: MessageSender.AI,
-            text: `**✅ Resultat från verktyget '${tool}':**\n\n${toolResultText}`,
-        };
-        updateChatSession(activeChat.id, [...currentMessages, resultMessage]);
+      const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
+      if (!metadataMatch || !metadataMatch[1]) {
+        throw new Error("Kunde inte extrahera metadata från AI-svaret.");
+      }
+      const metadata = JSON.parse(metadataMatch[1]);
+      
+      updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `Startar uppladdning av "${userMessage.attachment?.name}" till Google Drive...`}]);
+      
+      const responseMessage = await uploadToDrive(userMessage.attachment, metadata);
+      
+      updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${responseMessage}`}]);
+
     } catch (error) {
-        const errorMessageText = error instanceof Error ? error.message : "Ett okänt fel inträffade.";
-        const errorMessage: ChatMessage = {
-            id: `error-${Date.now()}`,
-            sender: MessageSender.AI,
-            text: `**🛑 Oj, verktyget misslyckades!**\n\n${errorMessageText}`,
-            isError: true,
-        };
-        updateChatSession(activeChat.id, [...currentMessages, errorMessage]);
-    } finally {
-        setIsLoading(false);
+      const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid uppladdning.";
+      updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Uppladdningen misslyckades: ${errorText}`, isError: true }]);
     }
   };
 
-  const handleRegenerateResponse = async (chatId: string, messageId: string) => {
-    const session = chatSessions.find(s => s.id === chatId);
-    if (!session) return;
+  const handleSelectChat = (id: string) => setActiveChatId(id);
 
-    const messageIndex = session.messages.findIndex(m => m.id === messageId);
-    if (messageIndex < 1 || session.messages[messageIndex].sender !== MessageSender.AI) return;
+  const handleDeleteChat = (id: string) => {
+    setChatSessions(prev => prev.filter(c => c.id !== id));
+    if (activeChatId === id) {
+      const remainingChats = chatSessions.filter(c => c.id !== id);
+      setActiveChatId(remainingChats.length > 0 ? remainingChats[0].id : null);
+    }
+  };
 
-    const historyUpToPrompt = session.messages.slice(0, messageIndex);
-    const lastUserMessage = historyUpToPrompt[historyUpToPrompt.length - 1];
-
-    if (lastUserMessage.sender !== MessageSender.USER) return;
-
-    setIsRegenerating(true);
-    try {
-      const aiResponseText = await getLocalAIResponse(
-        lastUserMessage.text, 
-        historyUpToPrompt, 
-        chatSessions, 
-        session, 
-        lastUserMessage.attachment
+  const handleRenameChat = (id: string, newTitle: string) => {
+    setChatSessions(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
+  };
+  
+  const handleFeedback = (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => {
+      updateChatMessages(chatId, (messages) =>
+        messages.map((msg) =>
+          msg.id === messageId ? { ...msg, feedback: msg.feedback === feedback ? null : feedback } : msg
+        )
       );
+  };
+  
+  const handleRegenerate = async (chatId: string, messageId: string) => {
+      const chat = chatSessions.find(c => c.id === chatId);
+      if (!chat || isResponding) return;
       
-      const newAiMessage: ChatMessage = { id: `ai-${Date.now()}`, sender: MessageSender.AI, text: aiResponseText };
-      
-      const updatedMessages = [...historyUpToPrompt, newAiMessage];
-      updateChatSession(chatId, updatedMessages);
+      const messageIndex = chat.messages.findIndex(m => m.id === messageId);
+      if (messageIndex < 1) return; // Cannot regenerate the very first message or non-existent messages
 
-    } catch (error) {
-       const errorMessageText = error instanceof Error ? error.message : "Ett okänt fel inträffade.";
-       const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        sender: MessageSender.AI,
-        text: `**🛑 Oj, något gick fel vid regenerering!**\n\n${errorMessageText}`,
-        isError: true,
-      };
-      const updatedMessages = [...historyUpToPrompt, errorMessage];
-      updateChatSession(chatId, updatedMessages);
-    } finally {
-      setIsRegenerating(false);
-    }
+      const historyUpToMessage = chat.messages.slice(0, messageIndex - 1);
+      const userPromptMessage = chat.messages[messageIndex - 1];
+
+      // Remove the old AI response and any subsequent messages
+      updateChatMessages(chatId, chat.messages.slice(0, messageIndex));
+      setIsResponding(true);
+
+      try {
+        const aiResponseText = await getLocalAIResponse(userPromptMessage.text, historyUpToMessage, chatSessions, chat, userPromptMessage.attachment);
+        const aiMessage: ChatMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: MessageSender.AI,
+          text: aiResponseText,
+        };
+        updateChatMessages(chatId, prev => [...prev, aiMessage]);
+      } catch (error) {
+        const errorMessage: ChatMessage = {
+          id: `err-${Date.now()}`,
+          sender: MessageSender.AI,
+          text: error instanceof Error ? error.message : "Ett okänt fel uppstod.",
+          isError: true,
+        };
+        updateChatMessages(chatId, prev => [...prev, errorMessage]);
+      } finally {
+        setIsResponding(false);
+      }
   };
 
-  const handleMessageFeedback = (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => {
-    setChatSessions(prev => prev.map(session => {
-        if (session.id !== chatId) return session;
+  const handleToolClick = async (tool: AITool, promptText: string) => {
+    const userInput = prompt(promptText);
+    if (!userInput || !activeChatId) return;
 
-        const updatedMessages = session.messages.map(message => {
-            if (message.id !== messageId) return message;
-            
-            const newFeedback = message.feedback === feedback ? null : feedback;
-            return { ...message, feedback: newFeedback };
-        });
+    let currentChat = activeChat;
+    if (!currentChat) {
+      currentChat = handleNewChat();
+    }
+    
+    const userMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      sender: MessageSender.USER,
+      text: `[Verktyg anropat: ${tool}] - ${userInput}`,
+    };
+    updateChatMessages(currentChat.id, prev => [...prev, userMessage]);
+    setIsResponding(true);
 
-        return { ...session, messages: updatedMessages };
-    }));
+    try {
+      const toolResult = await executeAITool(tool, { prompt: userInput });
+      const aiMessage: ChatMessage = {
+        id: `msg-${Date.now() + 1}`,
+        sender: MessageSender.AI,
+        text: toolResult,
+      };
+      updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
+    } catch(error) {
+      const errorMessage: ChatMessage = {
+        id: `err-${Date.now()}`,
+        sender: MessageSender.AI,
+        text: error instanceof Error ? error.message : `Fel vid körning av verktyg ${tool}.`,
+        isError: true,
+      };
+      updateChatMessages(currentChat.id, prev => [...prev, errorMessage]);
+    } finally {
+      setIsResponding(false);
+    }
+  };
+  
+  const handlePromptClick = (prompt: string) => {
+      handleSendMessage(prompt);
+  };
+  
+  const handleShareChat = (id: string) => {
+    const session = chatSessions.find(s => s.id === id);
+    if (session) {
+      const jsonString = JSON.stringify(session);
+      const encodedData = btoa(jsonString);
+      const url = `${window.location.origin}${window.location.pathname}#share=${encodedData}`;
+      navigator.clipboard.writeText(url);
+    }
   };
 
   if (isLoading) {
-    // A simple full-page loader
-    return <div className="w-screen h-screen flex items-center justify-center bg-gray-950 text-white">Laddar...</div>;
-  }
-
-  if (sharedSession) {
     return (
-      <div className="flex h-screen text-gray-200">
-        <div className="flex flex-col flex-1">
-          <header className="bg-gray-950/60 backdrop-blur-xl border-b border-purple-500/30 p-4 shadow-[0_4px_15px_-5px_rgba(168,85,247,0.4)] z-10 flex items-center justify-between">
-            <h1 className="text-xl font-bold text-center text-shimmer" style={{ fontFamily: 'var(--font-heading)' }}>
-              <i className="fa-solid fa-share-nodes mr-2 text-glow"></i>
-              Delad Konversation: {sharedSession.title}
-            </h1>
-            <a href={window.location.pathname} className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
-              <i className="fa-solid fa-arrow-left mr-2"></i>
-              Tillbaka till Appen
-            </a>
-          </header>
-          <main className="flex-1 overflow-hidden flex flex-col">
-            <ChatInterface 
-              chatId={sharedSession.id}
-              messages={sharedSession.messages} 
-              isLoading={false} 
-              onRegenerate={() => {}}
-              onFeedback={() => {}}
-              isReadOnly={true}
-            />
-          </main>
+        <div className="w-full h-screen flex items-center justify-center">
+            <h1 className="text-2xl font-bold text-shimmer">Laddar AI Hjärnan...</h1>
         </div>
-      </div>
     );
   }
 
   return (
-    <div className="flex h-screen text-gray-200">
-      <Sidebar onPromptClick={handleSendMessage} onToolClick={handleExecuteTool} />
-      <div className="flex flex-col flex-1">
-        <header className="bg-gray-950/60 backdrop-blur-xl border-b border-purple-500/30 p-4 shadow-[0_4px_15px_-5px_rgba(168,85,247,0.4)] z-10 flex items-center justify-between">
-            <div className="flex-1 flex justify-start">
-                <ChatSelector 
-                    sessions={chatSessions}
-                    activeId={activeChatId}
-                    onSelectChat={setActiveChatId}
-                    onNewChat={handleNewChat}
-                    onRenameChat={handleRenameChat}
-                    onDeleteChat={handleDeleteChat}
-                    onShareChat={handleShareChat}
-                    startRenamingId={startRenamingId}
-                    onRenameComplete={() => setStartRenamingId(null)}
-                />
+    <div className="flex h-screen max-h-screen bg-gray-900 text-gray-100">
+      <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} />
+      <main className="flex-1 flex flex-col relative">
+          <header className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
+              <ChatSelector 
+                sessions={chatSessions}
+                activeId={activeChatId}
+                onSelectChat={handleSelectChat}
+                onNewChat={handleNewChat}
+                onRenameChat={handleRenameChat}
+                onDeleteChat={handleDeleteChat}
+                onShareChat={handleShareChat}
+                startRenamingId={startRenamingId}
+                onRenameComplete={() => setStartRenamingId(null)}
+              />
+              <h1 className="text-xl font-bold text-shimmer hidden md:block" style={{ fontFamily: 'var(--font-heading)' }}>
+                Casper_AutoPilot
+              </h1>
+              <div className="w-48"></div>
+          </header>
+          {activeChat ? (
+            <ChatInterface 
+                chatId={activeChat.id}
+                messages={activeChat.messages} 
+                isLoading={isResponding}
+                onRegenerate={handleRegenerate}
+                onFeedback={handleFeedback}
+                onUploadToDrive={handleUploadToDrive}
+                isReadOnly={!!sharedSession}
+            />
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <p>Välj en konversation eller starta en ny.</p>
+              </div>
             </div>
-            <h1 className="text-xl font-bold text-center text-shimmer flex-shrink mx-4" style={{ fontFamily: 'var(--font-heading)' }}>
-                <i className="fa-solid fa-brain mr-2 text-glow"></i>
-                Local AI Brain: <span className="text-white/80 font-medium">{activeChat?.title || "Laddar..."}</span>
-            </h1>
-            <div className="flex-1 flex justify-end items-center">
-                <div className="flex items-center space-x-2 text-xs bg-green-500/10 text-green-400 px-3 py-1.5 rounded-full border border-green-500/30">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                    <span>Lokal Anslutning</span>
-                </div>
-            </div>
-        </header>
-        <main className="flex-1 overflow-hidden flex flex-col">
-          <ChatInterface 
-            chatId={activeChat?.id || ''}
-            messages={activeChat?.messages || []} 
-            isLoading={isLoading || isRegenerating} 
-            onRegenerate={handleRegenerateResponse}
-            onFeedback={handleMessageFeedback}
-          />
-          <InputBar onSendMessage={handleSendMessage} isLoading={isLoading || isRegenerating} />
-        </main>
-      </div>
+          )}
+          <InputBar onSendMessage={handleSendMessage} isLoading={isResponding} />
+      </main>
     </div>
   );
 };

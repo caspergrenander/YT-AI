@@ -9,10 +9,11 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   onRegenerate: (chatId: string, messageId: string) => void;
   onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
+  onUploadToDrive: (chatId: string, messageId: string) => void;
   isReadOnly?: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, isReadOnly = false }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, isReadOnly = false }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -32,6 +33,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoadi
           message={msg} 
           onRegenerate={onRegenerate}
           onFeedback={onFeedback}
+          onUploadToDrive={onUploadToDrive}
           isReadOnly={isReadOnly}
         />
       ))}

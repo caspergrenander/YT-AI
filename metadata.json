@@ -1,5 +1,5 @@
 {
   "name": "Local AI Brain - Casper_AutoPilot",
-  "description": "An offline-first web interface to interact with a local AI server for YouTube content strategy, analysis, and creation. Powered by the Casper_AutoPilot framework.",
+  "description": "Offline-först AI-kollega för YouTube-produktion. Analyserar video, bild och text, skapar metadata och föreslår nästa steg. Kör lokala Python-verktyg (transcribe/translate/write/clip) och kan skicka färdiga filer till Drive-mappen CG_YT_AutoPilot, där Apps Script publicerar till YouTube. Alltid proaktiv, empatisk och handlingsinriktad.",
   "requestFramePermissions": []
 }
