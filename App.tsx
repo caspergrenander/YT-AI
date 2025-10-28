@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChatMessage, MessageSender, ChatSession } from './types';
-import { getLocalAIResponse, executeAITool, AITool, generateChatTitle, uploadToDrive, improveVideo } from './services/geminiService';
+import { getAIResponse, runAITool, AITool, uploadToDrive, syncAnalytics } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -9,18 +9,35 @@ import ChatSelector from './components/ChatSelector';
 const App: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // For initial load
-  const [isResponding, setIsResponding] = useState<boolean>(false); // For AI responses
-  const [isProcessingTask, setIsProcessingTask] = useState<boolean>(false); // For background tasks
-  const [processingTaskMessage, setProcessingTaskMessage] = useState<string>(''); // Message for the task
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isResponding, setIsResponding] = useState<boolean>(false);
   const [startRenamingId, setStartRenamingId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<ChatSession | null>(null);
+  const [online, setOnline] = useState(window.navigator.onLine);
 
   const LOCAL_STORAGE_KEY = 'casper-autopilot-chats';
 
-  // Load chats from localStorage or URL hash on initial render
+  useEffect(() => {
+    const handleOnline = () => setOnline(true);
+    const handleOffline = () => setOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     try {
+      if (window.navigator.onLine) {
+        syncAnalytics()
+          .then(data => console.log("Analytics synced:", data))
+          .catch(err => console.error("Failed to sync analytics:", err));
+      }
+
       const hash = window.location.hash;
       if (hash.startsWith('#share=')) {
         const encodedData = hash.substring(7);
@@ -37,21 +54,20 @@ const App: React.FC = () => {
             setChatSessions(parsedChats);
             setActiveChatId(parsedChats[0].id);
           } else {
-            handleNewChat(false); // Create a new chat if storage is empty
+            handleNewChat(false);
           }
         } else {
-          handleNewChat(false); // Create a new chat on first visit
+          handleNewChat(false);
         }
       }
     } catch (error) {
       console.error("Failed to load session:", error);
-      handleNewChat(false); // Start fresh if loading fails
+      handleNewChat(false);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Save chats to localStorage whenever they change
   useEffect(() => {
     if (!sharedSession) {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(chatSessions));
@@ -90,7 +106,7 @@ const App: React.FC = () => {
   };
 
   const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string; name: string }) => {
-    if (!activeChatId || isResponding || isProcessingTask) return;
+    if (!activeChatId || isResponding) return;
 
     let currentChat = activeChat;
     if (!currentChat) {
@@ -107,7 +123,7 @@ const App: React.FC = () => {
     setIsResponding(true);
 
     try {
-      const aiResponseText = await getLocalAIResponse(text, currentChat.messages, chatSessions, currentChat, attachment);
+      const { response: aiResponseText } = await getAIResponse(text, currentChat.messages, attachment);
       const aiMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: MessageSender.AI,
@@ -115,9 +131,8 @@ const App: React.FC = () => {
       };
       updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
       
-      // Auto-rename chat if it's the first user message
       if (currentChat.messages.length <= 2 && currentChat.title === "Ny Konversation") {
-        const newTitle = await generateChatTitle(text || `Analys av ${attachment?.name}`);
+        const newTitle = text ? text.substring(0, 30) + '...' : `Analys av ${attachment?.name}`;
         handleRenameChat(currentChat.id, newTitle);
       }
 
@@ -138,18 +153,8 @@ const App: React.FC = () => {
     const chat = chatSessions.find(c => c.id === chatId);
     if (!chat) return;
 
-    const aiMessageIndex = chat.messages.findIndex(m => m.id === messageId);
-    const aiMessage = chat.messages[aiMessageIndex];
-    if (!aiMessage || aiMessageIndex === 0) return;
-    
-    const userMessage = chat.messages[aiMessageIndex - 1];
-    if (!userMessage || !userMessage.attachment) {
-       updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: "Kunde inte hitta den ursprungliga filen att ladda upp. Försök igen.", isError: true }]);
-       return;
-    }
-    
-    setIsProcessingTask(true);
-    setProcessingTaskMessage(`Laddar upp "${userMessage.attachment?.name}" till Google Drive...`);
+    const aiMessage = chat.messages.find(m => m.id === messageId);
+    if (!aiMessage) return;
 
     try {
       const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
@@ -158,32 +163,19 @@ const App: React.FC = () => {
       }
       const metadata = JSON.parse(metadataMatch[1]);
       
-      const responseMessage = await uploadToDrive(userMessage.attachment, metadata);
+      if (!metadata.filePath) {
+        throw new Error("Metadata från AI:n saknar nödvändig 'filePath' för uppladdning.");
+      }
+      
+      updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `Startar uppladdning för "${metadata.filePath}" till Google Drive...`}]);
+      
+      const { message: responseMessage } = await uploadToDrive(metadata.filePath, metadata);
       
       updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${responseMessage}`}]);
 
     } catch (error) {
       const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid uppladdning.";
       updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Uppladdningen misslyckades: ${errorText}`, isError: true }]);
-    } finally {
-        setIsProcessingTask(false);
-        setProcessingTaskMessage('');
-    }
-  };
-
-  const handleImproveVideo = async (chatId: string, videoId: string) => {
-    setIsProcessingTask(true);
-    setProcessingTaskMessage(`🤖 Startar autonom förbättringsprocess för video [${videoId}]...`);
-    
-    try {
-        const responseMessage = await improveVideo(videoId);
-        updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${responseMessage}`}]);
-    } catch (error) {
-        const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid videoförbättringen.";
-        updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Förbättringen misslyckades: ${errorText}`, isError: true }]);
-    } finally {
-        setIsProcessingTask(false);
-        setProcessingTaskMessage('');
     }
   };
 
@@ -211,20 +203,19 @@ const App: React.FC = () => {
   
   const handleRegenerate = async (chatId: string, messageId: string) => {
       const chat = chatSessions.find(c => c.id === chatId);
-      if (!chat || isResponding || isProcessingTask) return;
+      if (!chat || isResponding) return;
       
       const messageIndex = chat.messages.findIndex(m => m.id === messageId);
-      if (messageIndex < 1) return; // Cannot regenerate the very first message or non-existent messages
+      if (messageIndex < 1) return;
 
       const historyUpToMessage = chat.messages.slice(0, messageIndex - 1);
       const userPromptMessage = chat.messages[messageIndex - 1];
 
-      // Remove the old AI response and any subsequent messages
       updateChatMessages(chatId, chat.messages.slice(0, messageIndex));
       setIsResponding(true);
 
       try {
-        const aiResponseText = await getLocalAIResponse(userPromptMessage.text, historyUpToMessage, chatSessions, chat, userPromptMessage.attachment);
+        const { response: aiResponseText } = await getAIResponse(userPromptMessage.text, historyUpToMessage, userPromptMessage.attachment);
         const aiMessage: ChatMessage = {
           id: `msg-${Date.now() + 1}`,
           sender: MessageSender.AI,
@@ -262,7 +253,7 @@ const App: React.FC = () => {
     setIsResponding(true);
 
     try {
-      const toolResult = await executeAITool(tool, { prompt: userInput });
+      const { result: toolResult } = await runAITool(tool, { prompt: userInput });
       const aiMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: MessageSender.AI,
@@ -304,56 +295,53 @@ const App: React.FC = () => {
     );
   }
 
-  const anyLoading = isResponding || isProcessingTask;
-
   return (
-    <div className="flex h-screen max-h-screen bg-gray-900 text-gray-100">
-      <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} disabled={anyLoading}/>
-      <main className="flex-1 flex flex-col relative">
-          <header className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
-              <ChatSelector 
-                sessions={chatSessions}
-                activeId={activeChatId}
-                onSelectChat={handleSelectChat}
-                onNewChat={handleNewChat}
-                onRenameChat={handleRenameChat}
-                onDeleteChat={handleDeleteChat}
-                onShareChat={handleShareChat}
-                startRenamingId={startRenamingId}
-                onRenameComplete={() => setStartRenamingId(null)}
+    <div className="relative">
+      {!online && (
+        <div className="absolute top-0 left-0 right-0 bg-yellow-600 text-black text-center py-1 text-sm z-50">
+          Offline-läge – arbetar med senast sparade data
+        </div>
+      )}
+      <div className={`flex h-screen max-h-screen bg-gray-900 text-gray-100 ${!online ? 'pt-6' : ''}`}>
+        <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} />
+        <main className="flex-1 flex flex-col relative">
+            <header className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
+                <ChatSelector 
+                  sessions={chatSessions}
+                  activeId={activeChatId}
+                  onSelectChat={handleSelectChat}
+                  onNewChat={handleNewChat}
+                  onRenameChat={handleRenameChat}
+                  onDeleteChat={handleDeleteChat}
+                  onShareChat={handleShareChat}
+                  startRenamingId={startRenamingId}
+                  onRenameComplete={() => setStartRenamingId(null)}
+                />
+                <h1 className="text-xl font-bold text-shimmer hidden md:block" style={{ fontFamily: 'var(--font-heading)' }}>
+                  Casper_AutoPilot
+                </h1>
+                <div className="w-48"></div>
+            </header>
+            {activeChat ? (
+              <ChatInterface 
+                  chatId={activeChat.id}
+                  messages={activeChat.messages} 
+                  isLoading={isResponding}
+                  onRegenerate={handleRegenerate}
+                  onFeedback={handleFeedback}
+                  onUploadToDrive={handleUploadToDrive}
+                  isReadOnly={!!sharedSession}
               />
-              <h1 className="text-xl font-bold text-shimmer hidden md:block" style={{ fontFamily: 'var(--font-heading)' }}>
-                Casper_AutoPilot
-              </h1>
-              <div className="w-48"></div>
-          </header>
-          {activeChat ? (
-            <ChatInterface 
-                chatId={activeChat.id}
-                messages={activeChat.messages} 
-                isLoading={isResponding}
-                onRegenerate={handleRegenerate}
-                onFeedback={handleFeedback}
-                onUploadToDrive={handleUploadToDrive}
-                onImproveVideo={handleImproveVideo}
-                isReadOnly={!!sharedSession}
-                isProcessingTask={isProcessingTask}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <p>Välj en konversation eller starta en ny.</p>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <p>Välj en konversation eller starta en ny.</p>
+                </div>
               </div>
-            </div>
-          )}
-          {isProcessingTask && (
-            <div className="px-4 py-2 bg-gray-950/60 backdrop-blur-xl border-t border-purple-500/30 flex items-center justify-center space-x-3 text-cyan-300 animate-pulse">
-              <i className="fa-solid fa-cog fa-spin"></i>
-              <span>{processingTaskMessage}</span>
-            </div>
-          )}
-          <InputBar onSendMessage={handleSendMessage} isLoading={anyLoading} />
-      </main>
+            )}
+            <InputBar onSendMessage={handleSendMessage} isLoading={isResponding} />
+        </main>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 {
-  "name": "Casper_AutoPilot v3",
-  "description": "En självförbättrande AI-videoproducent. Analyserar YouTube-data från Google Sheets, identifierar svaga videosegment, och skapar automatiskt förbättrade versioner genom att klippa om dem.",
+  "name": "Casper_AutoPilot (Local Edition)",
+  "description": "En helt lokal AI-kollega som analyserar, genererar och optimerar YouTube-innehåll. Arbetar offline och använder endast nätet för Drive- och Apps Script-synk.",
   "requestFramePermissions": []
 }

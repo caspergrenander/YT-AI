@@ -10,12 +10,10 @@ interface ChatInterfaceProps {
   onRegenerate: (chatId: string, messageId: string) => void;
   onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
   onUploadToDrive: (chatId: string, messageId: string) => void;
-  onImproveVideo: (chatId: string, videoId: string) => void;
   isReadOnly?: boolean;
-  isProcessingTask: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, onImproveVideo, isReadOnly = false, isProcessingTask }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, isReadOnly = false }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -36,9 +34,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoadi
           onRegenerate={onRegenerate}
           onFeedback={onFeedback}
           onUploadToDrive={onUploadToDrive}
-          onImproveVideo={onImproveVideo}
           isReadOnly={isReadOnly}
-          isProcessingTask={isProcessingTask}
         />
       ))}
       {isLoading && (
