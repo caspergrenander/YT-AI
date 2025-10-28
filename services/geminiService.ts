@@ -88,15 +88,13 @@ export const syncAnalytics = async (): Promise<any> => {
             localStorage.setItem(key, JSON.stringify(data));
             return data;
         } catch (e) {
-            console.warn("API call failed or offline, trying to read from cache.", e);
             const cachedData = localStorage.getItem(key);
             if (cachedData) {
+                console.log("Could not sync with server, using cached data.");
                 return JSON.parse(cachedData);
             }
-            // If the API call fails AND there's no cache, return an empty object
-            // to prevent a hard crash on the first run without a network connection.
-            console.error("Synk mot Apps Script misslyckades och ingen cache fanns tillgänglig. Fortsätter med tom data.");
-            return {};
+            // If the API call fails AND there's no cache, return null silently.
+            return null;
         }
     };
 

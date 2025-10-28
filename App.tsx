@@ -37,11 +37,14 @@ const App: React.FC = () => {
         setAiStatus('working');
         syncAnalytics()
           .then(data => {
-            console.log("Analytics synced:", data);
+            if (data) {
+              console.log("Analytics synced:", data);
+            }
             setAiStatus('idle');
           })
           .catch(err => {
-            console.error("Failed to sync analytics:", err);
+            // This will now only catch truly unexpected errors
+            console.error("Failed to sync analytics due to an unexpected error:", err);
             setAiStatus('error');
           });
       }
