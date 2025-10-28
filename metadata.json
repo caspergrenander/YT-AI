@@ -1,5 +1,5 @@
 {
-  "name": "Local AI Brain - Casper_AutoPilot",
-  "description": "Offline-först AI-kollega för YouTube-produktion. Analyserar video, bild och text, skapar metadata och föreslår nästa steg. Kör lokala Python-verktyg (transcribe/translate/write/clip) och kan skicka färdiga filer till Drive-mappen CG_YT_AutoPilot, där Apps Script publicerar till YouTube. Alltid proaktiv, empatisk och handlingsinriktad.",
+  "name": "Casper_AutoPilot v3",
+  "description": "En självförbättrande AI-videoproducent. Analyserar YouTube-data från Google Sheets, identifierar svaga videosegment, och skapar automatiskt förbättrade versioner genom att klippa om dem.",
   "requestFramePermissions": []
 }

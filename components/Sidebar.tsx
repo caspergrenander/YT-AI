@@ -18,6 +18,7 @@ const PromptButton: React.FC<{ text: string; icon?: string; onClick: () => void;
 
 const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
   const keyInsightsPrompts = [
+    { text: "Analysera senaste videons prestanda", icon: "fa-solid fa-magnifying-glass-chart" },
     { text: "Vilka spel presterar bäst just nu?", icon: "fa-solid fa-gamepad" },
     { text: "Vad driver mest engagemang i mina videor?", icon: "fa-solid fa-fire" },
     { text: "Vilken typ av titel ger bäst CTR?", icon: "fa-solid fa-eye" },

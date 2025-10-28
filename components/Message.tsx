@@ -8,6 +8,7 @@ interface MessageProps {
   onRegenerate: (chatId: string, messageId: string) => void;
   onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
   onUploadToDrive: (chatId: string, messageId: string) => void;
+  onImproveVideo: (chatId: string, videoId: string) => void;
   isReadOnly?: boolean;
 }
 
@@ -23,35 +24,37 @@ const MessageInteractionButton: React.FC<{ icon: string; label: string; onClick:
 );
 
 
-const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, isReadOnly = false }) => {
+const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, onImproveVideo, isReadOnly = false }) => {
   const { sender, text, isError, attachment, feedback } = message;
   const isUser = sender === MessageSender.USER;
   const isToolCall = isUser && text.startsWith('[Verktyg anropat:');
   const [isCopied, setIsCopied] = useState(false);
   const [uploadMetadata, setUploadMetadata] = useState<any | null>(null);
+  const [improvementData, setImprovementData] = useState<{ videoId: string } | null>(null);
 
   useEffect(() => {
-    if (sender === MessageSender.AI && text.includes('"readyForUpload": true')) {
-      try {
-        const match = text.match(/```json\n([\s\S]*?)\n```/);
-        if (match && match[1]) {
-          const parsed = JSON.parse(match[1]);
-          if (parsed.readyForUpload) {
-            setUploadMetadata(parsed);
-          } else {
-            setUploadMetadata(null);
-          }
-        } else {
-            setUploadMetadata(null);
+    let uploadMeta = null;
+    let improvementMeta = null;
+
+    if (sender === MessageSender.AI && text.includes('```json')) {
+        try {
+            const match = text.match(/```json\n([\s\S]*?)\n```/);
+            if (match && match[1]) {
+                const parsed = JSON.parse(match[1]);
+                if (parsed.readyForUpload) {
+                    uploadMeta = parsed;
+                }
+                if (parsed.improvementSuggestion) {
+                    improvementMeta = parsed.improvementSuggestion;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to parse metadata JSON", e);
         }
-      } catch (e) {
-        console.error("Failed to parse upload metadata JSON", e);
-        setUploadMetadata(null);
-      }
-    } else {
-      setUploadMetadata(null);
     }
-  }, [text, sender]);
+    setUploadMetadata(uploadMeta);
+    setImprovementData(improvementMeta);
+}, [text, sender]);
 
 
   const createMarkup = (rawText: string) => {
@@ -87,7 +90,8 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
 
   const canInteract = !isUser && !isError && message.id !== 'initial-welcome' && !isReadOnly;
   const hasUploadAction = uploadMetadata && !isReadOnly;
-  const containerPadding = (canInteract || hasUploadAction) ? 'pb-12' : '';
+  const hasImprovementAction = improvementData && !isReadOnly;
+  const containerPadding = (canInteract || hasUploadAction || hasImprovementAction) ? 'pb-12' : '';
 
   return (
     <div className={`${containerClasses} message-enter group relative ${containerPadding}`}>
@@ -150,6 +154,18 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
                 isActive={feedback === 'disliked'}
             />
         </div>
+      )}
+      {hasImprovementAction && improvementData && (
+          <div className="absolute bottom-2 right-0 mr-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => onImproveVideo(chatId, improvementData.videoId)}
+                className="group flex items-center bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/50 pulse-btn-glow"
+                style={{ '--glow-color': '#22d3ee' } as React.CSSProperties}
+              >
+                  <i className="fa-solid fa-wand-magic-sparkles mr-2 transition-transform duration-300 group-hover:rotate-12"></i>
+                  Ja, skapa förbättrad version
+              </button>
+          </div>
       )}
       {hasUploadAction && (
           <div className="absolute bottom-2 right-0 mr-2 opacity-80 group-hover:opacity-100 transition-opacity duration-300">

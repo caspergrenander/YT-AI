@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChatMessage, MessageSender, ChatSession } from './types';
-import { getLocalAIResponse, executeAITool, AITool, generateChatTitle, uploadToDrive } from './services/geminiService';
+import { getLocalAIResponse, executeAITool, AITool, generateChatTitle, uploadToDrive, improveVideo } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -166,6 +166,18 @@ const App: React.FC = () => {
     }
   };
 
+  const handleImproveVideo = async (chatId: string, videoId: string) => {
+    updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `🤖 Startar autonom förbättringsprocess för video [${videoId}]...`}]);
+    
+    try {
+        const responseMessage = await improveVideo(videoId);
+        updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${responseMessage}`}]);
+    } catch (error) {
+        const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid videoförbättringen.";
+        updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Förbättringen misslyckades: ${errorText}`, isError: true }]);
+    }
+  };
+
   const handleSelectChat = (id: string) => setActiveChatId(id);
 
   const handleDeleteChat = (id: string) => {
@@ -312,6 +324,7 @@ const App: React.FC = () => {
                 onRegenerate={handleRegenerate}
                 onFeedback={handleFeedback}
                 onUploadToDrive={handleUploadToDrive}
+                onImproveVideo={handleImproveVideo}
                 isReadOnly={!!sharedSession}
             />
           ) : (
