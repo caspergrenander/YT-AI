@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [startRenamingId, setStartRenamingId] = useState<string | null>(null);
   const [sharedSession, setSharedSession] = useState<ChatSession | null>(null);
   const [online, setOnline] = useState(window.navigator.onLine);
+  const [aiStatus, setAiStatus] = useState<'idle' | 'working' | 'error'>("idle");
 
   const LOCAL_STORAGE_KEY = 'casper-autopilot-chats';
 
@@ -33,9 +34,16 @@ const App: React.FC = () => {
   useEffect(() => {
     try {
       if (window.navigator.onLine) {
+        setAiStatus('working');
         syncAnalytics()
-          .then(data => console.log("Analytics synced:", data))
-          .catch(err => console.error("Failed to sync analytics:", err));
+          .then(data => {
+            console.log("Analytics synced:", data);
+            setAiStatus('idle');
+          })
+          .catch(err => {
+            console.error("Failed to sync analytics:", err);
+            setAiStatus('error');
+          });
       }
 
       const hash = window.location.hash;
@@ -121,6 +129,7 @@ const App: React.FC = () => {
     };
     updateChatMessages(currentChat.id, prev => [...prev, userMessage]);
     setIsResponding(true);
+    setAiStatus('working');
 
     try {
       const { response: aiResponseText } = await getAIResponse(text, currentChat.messages, attachment);
@@ -135,7 +144,7 @@ const App: React.FC = () => {
         const newTitle = text ? text.substring(0, 30) + '...' : `Analys av ${attachment?.name}`;
         handleRenameChat(currentChat.id, newTitle);
       }
-
+      setAiStatus('idle');
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: `err-${Date.now()}`,
@@ -144,6 +153,7 @@ const App: React.FC = () => {
         isError: true,
       };
       updateChatMessages(currentChat.id, prev => [...prev, errorMessage]);
+      setAiStatus('error');
     } finally {
       setIsResponding(false);
     }
@@ -156,6 +166,7 @@ const App: React.FC = () => {
     const aiMessage = chat.messages.find(m => m.id === messageId);
     if (!aiMessage) return;
 
+    setAiStatus('working');
     try {
       const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
       if (!metadataMatch || !metadataMatch[1]) {
@@ -163,19 +174,25 @@ const App: React.FC = () => {
       }
       const metadata = JSON.parse(metadataMatch[1]);
       
-      if (!metadata.filePath) {
-        throw new Error("Metadata från AI:n saknar nödvändig 'filePath' för uppladdning.");
+      if (!metadata.videoPath) {
+        throw new Error("Metadata från AI:n saknar nödvändig 'videoPath' för optimering.");
       }
       
-      updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `Startar uppladdning för "${metadata.filePath}" till Google Drive...`}]);
+      updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `Startar optimering av "${metadata.videoPath}"...`}]);
       
-      const { message: responseMessage } = await uploadToDrive(metadata.filePath, metadata);
-      
-      updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${responseMessage}`}]);
+      const { result: toolResult } = await runAITool("optimize_video", { 
+          videoPath: metadata.videoPath, 
+          title: metadata.title,
+          description: metadata.description
+      });
+
+      updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${toolResult}`}]);
+      setAiStatus('idle');
 
     } catch (error) {
-      const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid uppladdning.";
-      updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Uppladdningen misslyckades: ${errorText}`, isError: true }]);
+      const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid optimering.";
+      updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Optimeringsprocessen misslyckades: ${errorText}`, isError: true }]);
+      setAiStatus('error');
     }
   };
 
@@ -213,6 +230,7 @@ const App: React.FC = () => {
 
       updateChatMessages(chatId, chat.messages.slice(0, messageIndex));
       setIsResponding(true);
+      setAiStatus('working');
 
       try {
         const { response: aiResponseText } = await getAIResponse(userPromptMessage.text, historyUpToMessage, userPromptMessage.attachment);
@@ -222,6 +240,7 @@ const App: React.FC = () => {
           text: aiResponseText,
         };
         updateChatMessages(chatId, prev => [...prev, aiMessage]);
+        setAiStatus('idle');
       } catch (error) {
         const errorMessage: ChatMessage = {
           id: `err-${Date.now()}`,
@@ -230,6 +249,7 @@ const App: React.FC = () => {
           isError: true,
         };
         updateChatMessages(chatId, prev => [...prev, errorMessage]);
+        setAiStatus('error');
       } finally {
         setIsResponding(false);
       }
@@ -251,6 +271,7 @@ const App: React.FC = () => {
     };
     updateChatMessages(currentChat.id, prev => [...prev, userMessage]);
     setIsResponding(true);
+    setAiStatus('working');
 
     try {
       const { result: toolResult } = await runAITool(tool, { prompt: userInput });
@@ -260,6 +281,7 @@ const App: React.FC = () => {
         text: toolResult,
       };
       updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
+      setAiStatus('idle');
     } catch(error) {
       const errorMessage: ChatMessage = {
         id: `err-${Date.now()}`,
@@ -268,6 +290,7 @@ const App: React.FC = () => {
         isError: true,
       };
       updateChatMessages(currentChat.id, prev => [...prev, errorMessage]);
+      setAiStatus('error');
     } finally {
       setIsResponding(false);
     }
@@ -294,15 +317,28 @@ const App: React.FC = () => {
         </div>
     );
   }
+  
+  const aiStatusMessage = {
+      working: 'AI analyserar...',
+      error: 'Ett fel uppstod i AI-kärnan',
+  }[aiStatus] || null;
 
   return (
     <div className="relative">
-      {!online && (
-        <div className="absolute top-0 left-0 right-0 bg-yellow-600 text-black text-center py-1 text-sm z-50">
-          Offline-läge – arbetar med senast sparade data
-        </div>
-      )}
-      <div className={`flex h-screen max-h-screen bg-gray-900 text-gray-100 ${!online ? 'pt-6' : ''}`}>
+       <div className="absolute top-0 left-0 right-0 z-50 text-center text-sm">
+            {!online && (
+              <div className="bg-yellow-600 text-black py-1">
+                Offline-läge – arbetar med senast sparade data
+              </div>
+            )}
+            {online && aiStatusMessage && (
+                <div className={`py-1 ${aiStatus === 'error' ? 'bg-red-600 text-white' : 'bg-blue-900/80 text-blue-300'}`}>
+                    <i className={`fa-solid ${aiStatus === 'working' ? 'fa-cog fa-spin' : 'fa-triangle-exclamation'} mr-2`}></i>
+                    {aiStatusMessage}
+                </div>
+            )}
+       </div>
+      <div className={`flex h-screen max-h-screen bg-gray-900 text-gray-100 ${(aiStatus !== 'idle' || !online) ? 'pt-6' : ''}`}>
         <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} />
         <main className="flex-1 flex flex-col relative">
             <header className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">

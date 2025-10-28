@@ -1,9 +1,11 @@
 import { ChatMessage } from '../types';
 
-const API_BASE = "http://127.0.0.1:5000";
+// Fix: Use `process.env.VITE_API_BASE` to align with the definition in `vite.config.ts`.
+// @ts-ignore - This will be replaced by Vite during the build process, but TypeScript is unaware of it without Node.js types.
+const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5000";
 
 // Fix: Define and export the AITool type based on its usage across the application.
-export type AITool = 'transcribe' | 'translate' | 'clip' | 'write';
+export type AITool = 'transcribe' | 'translate' | 'clip' | 'write' | 'optimize_video';
 
 /**
  * Skickar prompt och kontext till den lokala AI-hjärnan.
@@ -31,7 +33,8 @@ export const getAIResponse = async (
     });
 
     if (!response.ok) {
-        throw new Error(`Fel vid AI-anrop: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        throw new Error(`Fel vid AI-anrop: ${response.status} ${response.statusText} - ${errorText}`);
     }
     return await response.json();
 };
@@ -47,7 +50,8 @@ export const runAITool = async (tool: AITool, params: Record<string, any>): Prom
     });
 
     if (!res.ok) {
-        throw new Error(`Verktyget '${tool}' misslyckades (${res.status})`);
+        const errorText = await res.text();
+        throw new Error(`Verktyget '${tool}' misslyckades (${res.status}): ${errorText}`);
     }
     return await res.json();
 };
@@ -72,9 +76,35 @@ export const uploadToDrive = async (filePath: string, metadata: Record<string, a
  * Hämtar aktuell YouTube-data från Apps Script.
  */
 export const syncAnalytics = async (): Promise<any> => {
-    const res = await fetch(`${API_BASE}/api/sync`, { method: "GET" });
-    if (!res.ok) {
-        throw new Error("Synk mot Apps Script misslyckades");
-    }
-    return await res.json();
+    // This helper function attempts to fetch data, with a fallback to localStorage.
+    const cachedRequest = async (key: string, fn: () => Promise<any>) => {
+        try {
+            // Only attempt the network request if the user is online.
+            if (!window.navigator.onLine) {
+                // Throw to enter the catch block and try reading from cache.
+                throw new Error("Offline, using cache.");
+            }
+            const data = await fn();
+            localStorage.setItem(key, JSON.stringify(data));
+            return data;
+        } catch (e) {
+            console.warn("API call failed or offline, trying to read from cache.", e);
+            const cachedData = localStorage.getItem(key);
+            if (cachedData) {
+                return JSON.parse(cachedData);
+            }
+            // If the API call fails AND there's no cache, return an empty object
+            // to prevent a hard crash on the first run without a network connection.
+            console.error("Synk mot Apps Script misslyckades och ingen cache fanns tillgänglig. Fortsätter med tom data.");
+            return {};
+        }
+    };
+
+    return cachedRequest('analytics-cache', async () => {
+        const res = await fetch(`${API_BASE}/api/sync`, { method: "GET" });
+        if (!res.ok) {
+            throw new Error(`Synk mot Apps Script misslyckades med status ${res.status}`);
+        }
+        return await res.json();
+    });
 };
