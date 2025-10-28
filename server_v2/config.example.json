@@ -1,0 +1,29 @@
+{
+    "HOST": "127.0.0.1",
+    "PORT": 5000,
+    "LOG_LEVEL": "DEBUG",
+    "GOOGLE_DRIVE": {
+        "CREDENTIALS_FILE": "credentials.json",
+        "TOKEN_FILE": "token.json",
+        "SCOPES": [
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/spreadsheets.readonly"
+        ],
+        "NEW_VIDEOS_FOLDER_ID": "ID_for_Google_Drive_folder_with_new_videos",
+        "UPLOADED_VIDEOS_FOLDER_ID": "ID_for_Google_Drive_folder_for_uploaded_videos",
+        "LOG_BACKUP_FOLDER_ID": "ID_for_Google_Drive_folder_for_log_backups"
+    },
+    "GOOGLE_SHEETS": {
+        "ANALYTICS_SPREADSHEET_ID": "ID_for_the_Google_Sheet_with_analytics",
+        "ANALYTICS_SHEET_NAME": "YT_Analytics_Data"
+    },
+    "AI_BRAIN": {
+        "MODEL_PROVIDER": "internal",
+        "CTR_GOOD_THRESHOLD": 5.0,
+        "ENGAGEMENT_HIGH_THRESHOLD": 45.0
+    },
+    "SCHEDULER": {
+        "ANALYZE_INTERVAL_HOURS": 24,
+        "LOG_BACKUP_INTERVAL_HOURS": 24
+    }
+}

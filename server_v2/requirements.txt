@@ -1,0 +1,12 @@
+Flask==2.3.2
+Flask-Cors==4.0.0
+Flask-Limiter==3.5.0
+google-api-python-client==2.92.0
+google-auth-httplib2==0.1.0
+google-auth-oauthlib==1.0.0
+python-dotenv==1.0.0
+APScheduler==3.10.4
+colorlog==6.7.0
+# För framtida lokal modell
+# llama-cpp-python
+# sentence-transformers
