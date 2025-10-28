@@ -14,6 +14,7 @@ export interface ChatMessage {
     mimeType: string;
     name: string;
   };
+  feedback?: 'liked' | 'disliked' | null;
 }
 
 // Fix: Define and export the ChatSession interface, which was missing.

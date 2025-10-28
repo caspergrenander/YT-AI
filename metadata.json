@@ -1,5 +1,5 @@
 {
-  "name": "YouTube AI Assistant",
-  "description": "An interactive web interface to chat with your personal YouTube AI strategist. Get data-driven insights, brainstorm ideas, and optimize your content based on your channel's performance.",
+  "name": "Local AI Brain - Casper_AutoPilot",
+  "description": "An offline-first web interface to interact with a local AI server for YouTube content strategy, analysis, and creation. Powered by the Casper_AutoPilot framework.",
   "requestFramePermissions": []
 }

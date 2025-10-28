@@ -28,7 +28,19 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
       text: "Transkribera video från URL", 
       icon: "fa-solid fa-closed-captioning", 
       tool: 'transcribe' as AITool, 
-      promptText: "Ange YouTube-videons URL:" 
+      promptText: "Ange YouTube-videons URL för transkribering:" 
+    },
+    { 
+      text: "Generera Titel & Taggar", 
+      icon: "fa-solid fa-pencil-alt", 
+      tool: 'write' as AITool,
+      promptText: "Beskriv videons innehåll för att generera metadata:"
+    },
+    { 
+      text: "Föreslå Short-klipp", 
+      icon: "fa-solid fa-scissors", 
+      tool: 'clip' as AITool,
+      promptText: "Ange URL eller ämne för videon att klippa från:"
     },
     { 
       text: "Översätt text till engelska", 
@@ -60,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
       <div className="mb-8">
         <h2 className="text-lg font-semibold mb-4 text-cyan-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
           <i className="fa-solid fa-toolbox mr-2"></i>
-          AI-Verktyg
+          Lokala Agenter
         </h2>
         <div className="space-y-3">
           {toolPrompts.map((prompt, index) => (

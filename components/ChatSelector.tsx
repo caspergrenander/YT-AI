@@ -7,31 +7,33 @@ interface ChatSelectorProps {
   onSelectChat: (id: string) => void;
   onNewChat: () => void;
   onRenameChat: (id: string, newTitle: string) => void;
+  onDeleteChat: (id: string) => void;
+  onShareChat: (id: string) => void;
   startRenamingId: string | null;
   onRenameComplete: () => void;
 }
 
-const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelectChat, onNewChat, onRenameChat, startRenamingId, onRenameComplete }) => {
+const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelectChat, onNewChat, onRenameChat, onDeleteChat, onShareChat, startRenamingId, onRenameComplete }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Effect to automatically start renaming when a new chat is created
   useEffect(() => {
     if (startRenamingId) {
       const sessionToRename = sessions.find(s => s.id === startRenamingId);
       if (sessionToRename) {
         setEditingId(startRenamingId);
         setRenameValue(sessionToRename.title);
-        setIsOpen(true); // Make sure dropdown is open
+        setIsOpen(true);
         onRenameComplete();
       }
     }
   }, [startRenamingId, sessions, onRenameComplete]);
 
-  // Effect to focus the input when editing starts
   useEffect(() => {
     if (editingId && inputRef.current) {
       inputRef.current.focus();
@@ -52,12 +54,16 @@ const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelec
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [editingId, renameValue]);
 
-  const handleSelect = (id: string) => {
-    if (editingId) {
-      handleRenameSubmit();
+  const handleItemClick = (session: ChatSession) => {
+    if (editingId && editingId !== session.id) {
+        handleRenameSubmit();
     }
-    onSelectChat(id);
-    setIsOpen(false);
+    if (session.id === activeId) {
+        startEditing(session);
+    } else {
+        onSelectChat(session.id);
+        setIsOpen(false);
+    }
   };
 
   const handleRenameSubmit = () => {
@@ -65,6 +71,22 @@ const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelec
       onRenameChat(editingId, renameValue);
     }
     setEditingId(null);
+  };
+  
+  const handleDeleteClick = (e: React.MouseEvent, session: ChatSession) => {
+    e.stopPropagation();
+    if(window.confirm(`Är du säker på att du vill radera konversationen "${session.title}" permanent?`)) {
+        onDeleteChat(session.id);
+    }
+  }
+
+  const handleShareClick = (e: React.MouseEvent, session: ChatSession) => {
+    e.stopPropagation();
+    onShareChat(session.id);
+    setCopiedId(session.id);
+    setTimeout(() => {
+        setCopiedId(null);
+    }, 2000);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -79,6 +101,10 @@ const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelec
     setEditingId(session.id);
     setRenameValue(session.title);
   };
+  
+  const filteredSessions = sessions.filter(session =>
+    session.title.toLowerCase().includes(searchQuery.toLowerCase())
+  ).sort((a, b) => (b.id.split('-')[1] as any) - (a.id.split('-')[1] as any));
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -93,7 +119,7 @@ const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelec
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-72 bg-gray-900/90 backdrop-blur-lg border border-purple-500/50 rounded-lg shadow-2xl shadow-purple-900/50 z-20 animate-slide-in-fade">
-          <div className="p-2">
+          <div className="p-2 space-y-2">
             <button
               onClick={onNewChat}
               className="w-full text-left p-2.5 rounded-md hover:bg-purple-500/20 transition-colors flex items-center text-white font-semibold"
@@ -101,14 +127,23 @@ const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelec
               <i className="fa-solid fa-plus mr-3"></i>
               Ny Konversation
             </button>
+            <div className="relative">
+                <i className="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
+                <input
+                    type="text"
+                    placeholder="Sök konversation..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-800/80 text-white p-2.5 pl-9 rounded-md outline-none focus:ring-2 focus:ring-cyan-400"
+                />
+            </div>
           </div>
-          <div className="border-t border-purple-500/30 my-1"></div>
+          <div className="border-t border-purple-500/30"></div>
           <div className="max-h-80 overflow-y-auto p-2 space-y-1">
-            {sessions.map(session => (
+            {filteredSessions.map(session => (
               <div
                 key={session.id}
-                onDoubleClick={() => startEditing(session)}
-                className={`w-full text-left rounded-md transition-colors flex items-center justify-between ${
+                className={`group w-full text-left rounded-md transition-colors flex items-center justify-between ${
                   activeId === session.id && !editingId ? 'bg-purple-500/30' : ''
                 } ${editingId !== session.id ? 'hover:bg-purple-500/20' : ''} cursor-pointer`}
               >
@@ -123,15 +158,39 @@ const ChatSelector: React.FC<ChatSelectorProps> = ({ sessions, activeId, onSelec
                     className="w-full bg-gray-700/80 text-white p-2.5 rounded-md outline-none ring-2 ring-cyan-400"
                   />
                 ) : (
-                  <button onClick={() => handleSelect(session.id)} className="w-full text-left p-2.5 flex items-center justify-between">
-                     <span className="truncate pr-2">{session.title}</span>
-                    {activeId === session.id && (
-                      <i className="fa-solid fa-check text-cyan-400"></i>
-                    )}
-                  </button>
+                  <>
+                    <button onClick={() => handleItemClick(session)} className="flex-grow text-left p-2.5 flex items-center min-w-0">
+                      <span className="truncate pr-2">{session.title}</span>
+                      {activeId === session.id && (
+                        <i className="fa-solid fa-check text-cyan-400 ml-auto flex-shrink-0"></i>
+                      )}
+                    </button>
+                    <div className="flex items-center flex-shrink-0 mr-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                            onClick={(e) => handleShareClick(e, session)}
+                            className="p-2 rounded-full text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10"
+                            aria-label={`Dela ${session.title}`}
+                            title="Kopiera delningslänk"
+                        >
+                            <i className={`fa-solid ${copiedId === session.id ? 'fa-check text-cyan-400' : 'fa-share-nodes'} text-xs transition-all`}></i>
+                        </button>
+                        <button
+                            onClick={(e) => handleDeleteClick(e, session)}
+                            className="p-2 rounded-full text-gray-500 hover:text-red-400 hover:bg-red-500/10"
+                            aria-label={`Radera ${session.title}`}
+                        >
+                            <i className="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                  </>
                 )}
               </div>
             ))}
+             {filteredSessions.length === 0 && (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                    Inga konversationer hittades.
+                </div>
+             )}
           </div>
         </div>
       )}

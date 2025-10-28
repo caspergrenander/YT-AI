@@ -1,16 +1,18 @@
-
-
 import React, { useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import Message from './Message';
 import Loader from './Loader';
 
 interface ChatInterfaceProps {
+  chatId: string;
   messages: ChatMessage[];
   isLoading: boolean;
+  onRegenerate: (chatId: string, messageId: string) => void;
+  onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
+  isReadOnly?: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, isLoading }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, isReadOnly = false }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -24,7 +26,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, isLoading }) =>
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-transparent">
       {messages.map((msg) => (
-        <Message key={msg.id} message={msg} />
+        <Message 
+          key={msg.id} 
+          chatId={chatId}
+          message={msg} 
+          onRegenerate={onRegenerate}
+          onFeedback={onFeedback}
+          isReadOnly={isReadOnly}
+        />
       ))}
       {isLoading && (
         <div className="flex justify-start">

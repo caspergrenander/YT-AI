@@ -1,19 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ChatMessage, MessageSender } from '../types';
 import { marked } from 'marked';
 
 interface MessageProps {
+  chatId: string;
   message: ChatMessage;
+  onRegenerate: (chatId: string, messageId: string) => void;
+  onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
+  isReadOnly?: boolean;
 }
 
-const Message: React.FC<MessageProps> = ({ message }) => {
-  const { sender, text, isError, attachment } = message;
+const MessageInteractionButton: React.FC<{ icon: string; label: string; onClick: () => void; isActive?: boolean }> = ({ icon, label, onClick, isActive }) => (
+    <button
+        onClick={onClick}
+        className={`p-1.5 rounded-md transition-colors duration-200 ${isActive ? 'text-cyan-400 bg-cyan-500/10' : 'text-gray-400 hover:text-white hover:bg-white/10'}`}
+        aria-label={label}
+        title={label}
+    >
+        <i className={`fa-solid ${icon}`}></i>
+    </button>
+);
+
+
+const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, isReadOnly = false }) => {
+  const { sender, text, isError, attachment, feedback } = message;
   const isUser = sender === MessageSender.USER;
   const isToolCall = isUser && text.startsWith('[Verktyg anropat:');
+  const [isCopied, setIsCopied] = useState(false);
 
   const createMarkup = (text: string) => {
     const rawMarkup = marked.parse(text, { breaks: true, gfm: true });
     return { __html: rawMarkup };
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    });
   };
 
   const containerClasses = isUser ? 'flex justify-end' : 'flex justify-start';
@@ -32,8 +56,11 @@ const Message: React.FC<MessageProps> = ({ message }) => {
   const hoverShadowClass = message.isError ? 'hover:shadow-red-900/60' : (isToolCall ? 'hover:shadow-cyan-900/60' : 'hover:shadow-purple-900/50');
   const aiGlowClass = !isUser && message.id !== 'initial-welcome' && !message.isError ? 'ai-message-glow' : '';
 
+  const canInteract = !isUser && !isError && message.id !== 'initial-welcome' && !isReadOnly;
+  const containerPadding = canInteract ? 'pb-8' : '';
+
   return (
-    <div className={`${containerClasses} message-enter`}>
+    <div className={`${containerClasses} message-enter group relative ${containerPadding}`}>
       <div className={`p-4 rounded-xl max-w-md md:max-w-xl lg:max-w-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${bubbleClasses} ${aiGlowClass} ${hoverShadowClass}`}>
         {isToolCall && (
           <div className="flex items-center text-cyan-400 mb-2 font-semibold text-sm">
@@ -66,6 +93,34 @@ const Message: React.FC<MessageProps> = ({ message }) => {
           />
         )}
       </div>
+       {canInteract && (
+        <div className="absolute bottom-2 left-0 ml-2 flex items-center space-x-1 bg-gray-900/70 backdrop-blur-sm border border-white/10 rounded-full px-2 py-1 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
+            <MessageInteractionButton 
+                icon="fa-arrows-rotate"
+                label="Regenerera svar"
+                onClick={() => onRegenerate(chatId, message.id)}
+            />
+             <MessageInteractionButton 
+                icon={isCopied ? "fa-check" : "fa-copy"}
+                label="Kopiera text"
+                onClick={handleCopy}
+                isActive={isCopied}
+            />
+            <div className="w-px h-4 bg-white/20 mx-1"></div>
+            <MessageInteractionButton 
+                icon="fa-thumbs-up"
+                label="Gilla"
+                onClick={() => onFeedback(chatId, message.id, 'liked')}
+                isActive={feedback === 'liked'}
+            />
+             <MessageInteractionButton 
+                icon="fa-thumbs-down"
+                label="Ogilla"
+                onClick={() => onFeedback(chatId, message.id, 'disliked')}
+                isActive={feedback === 'disliked'}
+            />
+        </div>
+      )}
     </div>
   );
 };
