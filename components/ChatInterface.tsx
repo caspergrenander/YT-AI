@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ChatMessage } from '../types';
 import Message from './Message';
-import Loader from './Loader';
+import ThinkingIndicator from './ThinkingIndicator';
 
 interface ChatInterfaceProps {
   chatId: string;
@@ -12,9 +12,11 @@ interface ChatInterfaceProps {
   onUploadToDrive: (chatId: string, messageId: string) => void;
   onSendMessage: (text: string) => void;
   isReadOnly?: boolean;
+  mode: 'gpt5' | 'pro';
+  thinkingMessage: string | null;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, onSendMessage, isReadOnly = false }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, onSendMessage, isReadOnly = false, mode, thinkingMessage }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -39,12 +41,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoadi
           isReadOnly={isReadOnly}
         />
       ))}
-      {isLoading && (
-        <div className="flex justify-start">
-            <div className="flex items-center bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg max-w-lg border-t border-purple-500/50">
-                <Loader />
-                <span className="text-sm text-gray-400 ml-3 animate-pulse">GPT-5 formulerar svar...</span>
-            </div>
+      {isLoading && thinkingMessage && (
+        <div className="flex justify-start message-enter">
+            <ThinkingIndicator mode={mode} message={thinkingMessage} />
         </div>
       )}
       <div ref={messagesEndRef} />

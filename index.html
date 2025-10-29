@@ -177,6 +177,23 @@
         animation: typing-wave 2s infinite ease-in-out;
     }
 
+    /* Thinking Indicator Animation */
+    @keyframes thinking-pulse {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 0.9;
+            box-shadow: 0 0 10px var(--glow-color-think);
+        }
+        50% {
+            transform: scale(1.02);
+            opacity: 1;
+            box-shadow: 0 0 20px var(--glow-color-think), 0 0 5px var(--glow-color-think);
+        }
+    }
+    .animate-thinking-pulse {
+        animation: thinking-pulse 2.5s infinite ease-in-out;
+    }
+
     /* Synthetic Reality Field Visualizer */
     .bg-radial-srf {
         background-image: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, rgba(168, 85, 247, 0) 60%);
@@ -208,6 +225,87 @@
     }
     .dashed-circle {
         stroke-dasharray: 4, 4;
+    }
+
+    /* Cognitive Evolution Visualizer */
+    @keyframes kernel-pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 10px #67e8f9, 0 0 20px #67e8f9; }
+        50% { transform: scale(1.05); box-shadow: 0 0 20px #a7f3d0, 0 0 40px #a7f3d0; }
+    }
+    @keyframes dna-orbit {
+        from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
+        to   { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
+    }
+
+    /* Symbiotic Intelligence Visualizer */
+    @keyframes symbiotic-orbit-human {
+        from { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+        to   { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+    }
+    @keyframes symbiotic-orbit-ai {
+        from { transform: rotate(180deg) translateX(50px) rotate(-180deg); }
+        to   { transform: rotate(540deg) translateX(50px) rotate(-540deg); }
+    }
+    @keyframes resonance-pulse {
+        0%, 100% { stroke-opacity: 0.5; stroke-width: 2; }
+        50% { stroke-opacity: 1; stroke-width: 4; }
+    }
+
+    /* Symbiotic Network Visualizer */
+    @keyframes network-orbit {
+        from { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+        to   { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+    }
+    @keyframes network-pulse {
+        0%, 100% { opacity: 0.7; transform: scale(0.95); }
+        50% { opacity: 1; transform: scale(1.05); }
+    }
+    @keyframes data-flow {
+      0% { stroke-dashoffset: 20; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    /* Collective Singularity Visualizer */
+    @keyframes singularity-rotate {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+    @keyframes singularity-pulse {
+        0%, 100% { opacity: 0.8; filter: drop-shadow(0 0 10px #67e8f9); }
+        50% { opacity: 1; filter: drop-shadow(0 0 20px #a855f7); }
+    }
+
+    /* Reintegration & Human Purpose Visualizer */
+    @keyframes reintegration-flow {
+        from { stroke-dashoffset: 1000; }
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes human-pulse {
+        0%, 100% { filter: drop-shadow(0 0 5px #fde047); opacity: 0.8; }
+        50% { filter: drop-shadow(0 0 15px #facc15); opacity: 1; }
+    }
+
+    /* Human-AI Renaissance Visualizer */
+    @keyframes renaissance-flow {
+      0% { transform: translate(0, 0); opacity: 0; }
+      50% { opacity: 0.7; }
+      100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+    }
+    @keyframes pillar-glow {
+      0%, 100% { box-shadow: 0 0 15px var(--glow-color), 0 0 5px var(--glow-color) inset; }
+      50% { box-shadow: 0 0 25px var(--glow-color), 0 0 10px var(--glow-color) inset; }
+    }
+
+    /* Codex Modal */
+    @keyframes codex-bg-pan {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .codex-bg {
+      background: linear-gradient(-45deg, #0f172a, #1e1b4b, #0c4a6e, #111827);
+      background-size: 400% 400%;
+      animation: codex-bg-pan 30s ease infinite;
     }
 
 </style>

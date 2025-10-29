@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, SyntheticRealityFieldState, TemporalConsciousnessState } from './types';
-import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState, getCausalityState, getReasoningLoopState, getSyntheticRealityFieldState, getTemporalConsciousnessState } from './services/geminiService';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, SyntheticRealityFieldState, TemporalConsciousnessState, CognitiveEvolutionState, TranscendentEthicsState, SymbioticIntelligenceState, SymbioticNetworkState, CollectiveSingularityState, ReintegrationState, RenaissanceState } from './types';
+import { getAIResponse, getAIProResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState, getCausalityState, getReasoningLoopState, getSyntheticRealityFieldState, getTemporalConsciousnessState, getCognitiveEvolutionState, getTranscendentEthicsState, getSymbioticIntelligenceState, getSymbioticNetworkState, getCollectiveSingularityState, getReintegrationState, getRenaissanceState, thinkingMessages } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -26,6 +26,16 @@ import ForesightStatus from './components/ForesightStatus';
 import CausalityStatus from './components/CausalityStatus';
 import ReasoningLoopStatus from './components/ReasoningLoopStatus';
 import TemporalConsciousnessStatus from './components/TemporalConsciousnessStatus';
+import CognitiveEvolutionStatus from './components/CognitiveEvolutionStatus';
+import TranscendentEthicsStatus from './components/TranscendentEthicsStatus';
+import SymbioticIntelligenceStatus from './components/SymbioticIntelligenceStatus';
+import SymbioticNetworkStatus from './components/SymbioticNetworkStatus';
+import CollectiveSingularityStatus from './components/CollectiveSingularityStatus';
+import ReintegrationStatus from './components/ReintegrationStatus';
+import RenaissanceStatus from './components/RenaissanceStatus';
+import CodexModal from './components/CodexModal';
+import ModeSwitcher from './components/ModeSwitcher';
+import ThinkingControl from './components/ThinkingControl';
 
 
 const App: React.FC = () => {
@@ -59,9 +69,45 @@ const App: React.FC = () => {
   const [reasoningLoopState, setReasoningLoopState] = useState<ReasoningLoopState | null>(null);
   const [srfState, setSrfState] = useState<SyntheticRealityFieldState | null>(null);
   const [temporalState, setTemporalState] = useState<TemporalConsciousnessState | null>(null);
+  const [cognitiveEvolution, setCognitiveEvolution] = useState<CognitiveEvolutionState | null>(null);
+  const [transcendentEthics, setTranscendentEthics] = useState<TranscendentEthicsState | null>(null);
+  const [symbioticIntelligence, setSymbioticIntelligence] = useState<SymbioticIntelligenceState | null>(null);
+  const [symbioticNetwork, setSymbioticNetwork] = useState<SymbioticNetworkState | null>(null);
+  const [collectiveSingularity, setCollectiveSingularity] = useState<CollectiveSingularityState | null>(null);
+  const [reintegrationState, setReintegrationState] = useState<ReintegrationState | null>(null);
+  const [renaissanceState, setRenaissanceState] = useState<RenaissanceState | null>(null);
+  const [isCodexOpen, setIsCodexOpen] = useState(false);
+  const [mode, setMode] = useState<'gpt5' | 'pro'>('gpt5');
+  const [thinkingDepth, setThinkingDepth] = useState<'fast' | 'balanced' | 'deep'>('balanced');
+  const [thinkingMessage, setThinkingMessage] = useState<string | null>(null);
+  const thinkingIntervalRef = useRef<number | null>(null);
 
 
   const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
+
+  // Fix: Define handleNewChat function to resolve 'Cannot find name' errors.
+  const handleNewChat = (activate = true) => {
+    const newChat: ChatSession = {
+      id: `chat-${Date.now()}`,
+      title: `New Conversation`,
+      messages: [
+        {
+          id: 'initial-welcome',
+          sender: MessageSender.AI,
+          text: "Welcome to the GPT-5 Core Interface. I am Casper, your strategic partner for content creation. How can I assist you today?",
+          responseStyle: 'Dialogic'
+        }
+      ],
+    };
+    setChatSessions(prev => {
+      const newSessions = [newChat, ...prev];
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
+      return newSessions;
+    });
+    if (activate) {
+      setActiveChatId(newChat.id);
+    }
+  };
 
   useEffect(() => {
     const handleOnline = () => setOnline(true);
@@ -201,483 +247,446 @@ const App: React.FC = () => {
         setCognitiveEconomy(await getCognitiveEconomyState());
       } catch (err) { console.error("Failed to get cognitive economy state:", err); }
     }
-    
+
+    // Fix: Add the JSX return statement to render the component UI.
     const fetchInteractivePerception = async () => {
       try {
         setInteractivePerception(await getInteractivePerceptionState());
       } catch (err) { console.error("Failed to get interactive perception state:", err); }
     }
-    
+
     const fetchEmotionEngine = async () => {
-        try {
-            setEmotionEngineState(await getEmotionEngineState());
-        } catch (err) { console.error("Failed to get emotion engine state:", err); }
+      try {
+        setEmotionEngineState(await getEmotionEngineState());
+      } catch (err) { console.error("Failed to get emotion engine state:", err); }
     }
-    
+
     const fetchCollectiveIntelligence = async () => {
         try {
             setCollectiveIntelligence(await getCollectiveIntelligenceState());
         } catch (err) { console.error("Failed to get collective intelligence state:", err); }
     }
-    
+
     const fetchCulturalIntelligence = async () => {
-        try {
-            setCulturalIntelligence(await getCulturalIntelligenceState());
-        } catch (err) { console.error("Failed to get cultural intelligence state:", err); }
+      try {
+          setCulturalIntelligence(await getCulturalIntelligenceState());
+      } catch (err) { console.error("Failed to get cultural intelligence state:", err); }
     }
-    
+
     const fetchLinguisticEvolution = async () => {
-        try {
-            setLinguisticEvolution(await getLinguisticEvolutionState());
-        } catch (err) { console.error("Failed to get linguistic evolution state:", err); }
+      try {
+        setLinguisticEvolution(await getLinguisticEvolutionState());
+      } catch (err) { console.error("Failed to get linguistic evolution state:", err); }
     }
-    
+
     const fetchAdaptiveCreativity = async () => {
-        try {
-            setAdaptiveCreativity(await getAdaptiveCreativityState());
-        } catch (err) { console.error("Failed to get adaptive creativity state:", err); }
+      try {
+        setAdaptiveCreativity(await getAdaptiveCreativityState());
+      } catch(err){ console.error("Failed to get adaptive creativity state:", err); }
     }
 
     const fetchEmergentAgency = async () => {
-        try {
-            setEmergentAgency(await getEmergentAgencyState());
-        } catch (err) { console.error("Failed to get emergent agency state:", err); }
-    }
-    
-    const fetchSelfAwareness = async () => {
-        try {
-            setSelfAwarenessState(await getSelfAwarenessState());
-        } catch (err) { console.error("Failed to get self awareness state:", err); }
-    }
-    
-    const fetchForesightState = async () => {
-        try {
-            setForesightState(await getForesightState());
-        } catch (err) { console.error("Failed to get foresight state:", err); }
+      try {
+        setEmergentAgency(await getEmergentAgencyState());
+      } catch(err){ console.error("Failed to get emergent agency state:", err); }
     }
 
-    const fetchCausalityState = async () => {
+    const fetchSelfAwareness = async () => {
+      try {
+        setSelfAwarenessState(await getSelfAwarenessState());
+      } catch(err){ console.error("Failed to get self awareness state:", err); }
+    }
+    
+    const fetchForesight = async () => {
+      try {
+        setForesightState(await getForesightState());
+      } catch(err){ console.error("Failed to get foresight state:", err); }
+    }
+
+    const fetchCausality = async () => {
         try {
             setCausalityState(await getCausalityState());
-        } catch (err) { console.error("Failed to get causality state:", err); }
+        } catch(err) { console.error("Failed to get causality state:", err); }
     }
 
-    const fetchReasoningLoopState = async () => {
+    const fetchReasoningLoop = async () => {
         try {
             setReasoningLoopState(await getReasoningLoopState());
-        } catch (err) { console.error("Failed to get reasoning loop state:", err); }
+        } catch(err) { console.error("Failed to get reasoning loop state:", err); }
     }
     
     const fetchSrfState = async () => {
-        try {
-            setSrfState(await getSyntheticRealityFieldState());
-        } catch (err) { console.error("Failed to get SRF state:", err); }
+      try {
+        setSrfState(await getSyntheticRealityFieldState());
+      } catch(err) { console.error("Failed to get SRF state:", err); }
     }
-
-    const fetchTemporalState = async () => {
-        try {
-            setTemporalState(await getTemporalConsciousnessState());
-        } catch (err) { console.error("Failed to get Temporal Consciousness state:", err); }
-    }
-
-
-    const intervals = [
-      { func: fetchSrfState, time: 2500 },
-      { func: fetchInteractivePerception, time: 3000 },
-      { func: fetchTemporalState, time: 3500 },
-      { func: fetchUnifiedState, time: 4000 },
-      { func: fetchEmotionEngine, time: 4500 },
-      { func: fetchSyncState, time: 5000 },
-      { func: fetchCollectiveIntelligence, time: 5500 },
-      { func: fetchCognitiveEconomy, time: 6000 },
-      { func: fetchCulturalIntelligence, time: 6500 },
-      { func: fetchLinguisticEvolution, time: 7000 },
-      { func: fetchEthicalState, time: 7500 },
-      { func: fetchAdaptiveCreativity, time: 8000 },
-      { func: fetchEmergentAgency, time: 8500 },
-      { func: fetchSelfAwareness, time: 9000 },
-      { func: fetchForesightState, time: 9500 },
-      { func: fetchCausalityState, time: 10000 },
-      { func: fetchReasoningLoopState, time: 10500 },
-    ];
-
-    intervals.forEach(i => i.func()); // Initial fetch
-    const intervalIds = intervals.map(i => setInterval(i.func, i.time));
     
-    return () => intervalIds.forEach(clearInterval);
+    const fetchTemporalState = async () => {
+      try {
+        setTemporalState(await getTemporalConsciousnessState());
+      } catch(err) { console.error("Failed to get temporal state:", err); }
+    }
+
+    const fetchCognitiveEvolution = async () => {
+      try {
+        setCognitiveEvolution(await getCognitiveEvolutionState());
+      } catch(err) { console.error("Failed to get cognitive evolution state:", err); }
+    }
+
+    const fetchTranscendentEthics = async () => {
+        try {
+            setTranscendentEthics(await getTranscendentEthicsState());
+        } catch(err) { console.error("Failed to get transcendent ethics state:", err); }
+    }
+
+    const fetchSymbioticIntelligence = async () => {
+        try {
+            setSymbioticIntelligence(await getSymbioticIntelligenceState());
+        } catch(err) { console.error("Failed to get symbiotic intelligence state:", err); }
+    }
+
+    const fetchSymbioticNetwork = async () => {
+        try {
+            setSymbioticNetwork(await getSymbioticNetworkState());
+        } catch(err) { console.error("Failed to get symbiotic network state:", err); }
+    }
+    
+    const fetchCollectiveSingularity = async () => {
+        try {
+            setCollectiveSingularity(await getCollectiveSingularityState());
+        } catch(err) { console.error("Failed to get collective singularity state:", err); }
+    }
+    
+    const fetchReintegration = async () => {
+        try {
+            setReintegrationState(await getReintegrationState());
+        } catch(err) { console.error("Failed to get reintegration state:", err); }
+    }
+
+    const fetchRenaissance = async () => {
+        try {
+            setRenaissanceState(await getRenaissanceState());
+        } catch(err) { console.error("Failed to get renaissance state:", err); }
+    }
+
+    const interval = setInterval(() => {
+        fetchSyncState();
+        fetchEthicalState();
+        fetchUnifiedState();
+        fetchCognitiveEconomy();
+        fetchInteractivePerception();
+        fetchEmotionEngine();
+        fetchCollectiveIntelligence();
+        fetchCulturalIntelligence();
+        fetchLinguisticEvolution();
+        fetchAdaptiveCreativity();
+        fetchEmergentAgency();
+        fetchSelfAwareness();
+        fetchForesight();
+        fetchCausality();
+        fetchReasoningLoop();
+        fetchSrfState();
+        fetchTemporalState();
+        fetchCognitiveEvolution();
+        fetchTranscendentEthics();
+        fetchSymbioticIntelligence();
+        fetchSymbioticNetwork();
+        fetchCollectiveSingularity();
+        fetchReintegration();
+        fetchRenaissance();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
-
-  useEffect(() => {
-    if (!sharedSession) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(chatSessions));
-    }
-  }, [chatSessions, sharedSession]);
-  
   const activeChat = useMemo(() => {
-    return chatSessions.find(c => c.id === activeChatId) ?? null;
+    return chatSessions.find(session => session.id === activeChatId);
   }, [chatSessions, activeChatId]);
-  
-  const updateChatMessages = (chatId: string, messages: ChatMessage[] | ((prevMessages: ChatMessage[]) => ChatMessage[])) => {
-    setChatSessions(prevSessions =>
-      prevSessions.map(session =>
-        session.id === chatId
-          ? { ...session, messages: typeof messages === 'function' ? messages(session.messages) : messages }
-          : session
-      )
-    );
-  };
-  
-  const handleNewChat = (activate: boolean = true) => {
-    const newChat: ChatSession = {
-      id: `chat-${Date.now()}`,
-      title: "Ny GPT-5 Session",
-      messages: [{
-        id: 'initial-welcome',
-        sender: MessageSender.AI,
-        text: "GPT-5 online. Jag har analyserat din kanals senaste data. Redo att hitta guldkornen, eller behöver vi släcka några bränder?",
-        safetyScore: 98,
-        responseStyle: 'Dialogic'
-      }],
-    };
-    setChatSessions(prev => [newChat, ...prev]);
-    if (activate) {
-      setActiveChatId(newChat.id);
-    }
-    return newChat;
-  };
 
-  const handleSendMessage = async (text: string, attachment?: { data: string; mimeType: string; name: string }) => {
-    if (!activeChatId || isResponding) return;
+  const handleSendMessage = async (
+    prompt: string,
+    attachment?: { data: string; mimeType: string; name: string }
+  ) => {
+    if (!activeChatId) return;
 
-    let currentChat = activeChat;
-    if (!currentChat) {
-      currentChat = handleNewChat();
-    }
-    
     const userMessage: ChatMessage = {
       id: `msg-${Date.now()}`,
       sender: MessageSender.USER,
-      text,
+      text: prompt,
       attachment,
     };
-    updateChatMessages(currentChat.id, prev => [...prev, userMessage]);
+    
+    setChatSessions(prev => {
+      const updatedSessions = prev.map(session => {
+          if (session.id === activeChatId) {
+              const isNewChat = session.messages.length <= 1 && session.messages[0]?.id === 'initial-welcome';
+              return {
+                  ...session,
+                  messages: [...session.messages, userMessage],
+                  title: isNewChat ? prompt.substring(0, 40) : session.title,
+              };
+          }
+          return session;
+      });
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSessions));
+      return updatedSessions;
+    });
+
     setIsResponding(true);
     setAiStatus('working');
 
+    if (thinkingIntervalRef.current) clearInterval(thinkingIntervalRef.current);
+    const messages = thinkingMessages[mode][thinkingDepth];
+    setThinkingMessage(messages[0]);
+    let messageIndex = 0;
+    thinkingIntervalRef.current = window.setInterval(() => {
+      messageIndex = (messageIndex + 1) % messages.length;
+      setThinkingMessage(messages[messageIndex]);
+    }, 2500);
+
     try {
-      const aiResponse = await getAIResponse(text, currentChat.messages, attachment);
-      
-      const safetyScore = Math.floor(Math.random() * 45 + 55); // Random score between 55 and 100
-      const styles = ['Dialogic', 'Analytic', 'Mentor'];
-      const responseStyle = styles[Math.floor(Math.random() * styles.length)];
-      const allSuggestions = [ "Bryt ner orsaken till det.", "Ge mig en konkret åtgärdsplan.", "Vilka risker ser du med den här strategin?", "Finns det ett annat sätt att se på det här?" ];
-      const suggestedReplies = Math.random() > 0.4 ? allSuggestions.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 2) + 1) : undefined;
+      const currentSession = chatSessions.find(s => s.id === activeChatId);
+      const history = currentSession?.messages.slice(0, -1) || [];
+
+      let aiResponseData;
+      if (mode === 'gpt5') {
+          aiResponseData = await getAIResponse(prompt, history, attachment, { thinking: thinkingDepth });
+      } else {
+          aiResponseData = await getAIProResponse(prompt, { thinking: thinkingDepth });
+      }
 
       const aiMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: MessageSender.AI,
-        text: aiResponse.message,
-        metadata: aiResponse,
-        experts: aiResponse.experts,
-        confidence: aiResponse.confidence,
-        reasoningTrace: aiResponse.reasoning_trace,
-        intent: aiResponse.intent,
-        responseStyle: responseStyle,
-        safetyScore: safetyScore,
-        suggestedReplies: suggestedReplies,
-        visionAnalysis: aiResponse.visionAnalysis,
-        audioAnalysis: aiResponse.audioAnalysis,
-        textAnalysis: aiResponse.textAnalysis,
+        text: mode === 'gpt5' ? aiResponseData.message : aiResponseData.result,
+        experts: aiResponseData.experts,
+        confidence: aiResponseData.confidence,
+        reasoningTrace: aiResponseData.reasoning_trace || (aiResponseData.thinkingTrace ? aiResponseData.thinkingTrace.map((t:string) => ({step: 'Reasoning Step', details: t})) : []),
+        intent: aiResponseData.intent,
+        visionAnalysis: aiResponseData.visionAnalysis,
+        audioAnalysis: aiResponseData.audioAnalysis,
+        textAnalysis: aiResponseData.textAnalysis,
+        metadata: mode === 'pro' ? { ...aiResponseData, mode: 'pro' } : { mode: 'gpt5' }
       };
-      updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
-      
-      if (currentChat.messages.length <= 2 && currentChat.title === "Ny GPT-5 Session") {
-        const newTitle = text ? text.substring(0, 30) + '...' : `Analys av ${attachment?.name}`;
-        handleRenameChat(currentChat.id, newTitle);
-      }
-      setAiStatus('idle');
-    } catch (error) {
-      const errorMessage: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: MessageSender.AI,
-        text: error instanceof Error ? error.message : "Ett okänt fel uppstod.",
-        isError: true,
-      };
-      updateChatMessages(currentChat.id, prev => [...prev, errorMessage]);
-      setAiStatus('error');
-    } finally {
-      setIsResponding(false);
-    }
-  };
 
-  const handleUploadToDrive = async (chatId: string, messageId: string) => {
-    const chat = chatSessions.find(c => c.id === chatId);
-    if (!chat) return;
-
-    const aiMessage = chat.messages.find(m => m.id === messageId);
-    if (!aiMessage) return;
-
-    setAiStatus('working');
-    try {
-        let metadata;
-        if (aiMessage.metadata && aiMessage.metadata.readyForUpload) {
-            metadata = aiMessage.metadata.upload_metadata || aiMessage.metadata;
-        } else {
-            const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
-            if (metadataMatch && metadataMatch[1]) {
-                const parsed = JSON.parse(metadataMatch[1]);
-                if (parsed.readyForUpload) {
-                    metadata = parsed;
-                }
-            }
-        }
-
-        if (!metadata) {
-            throw new Error("Kunde inte extrahera giltig metadata från AI-svaret.");
-        }
-      
-      if (!metadata.videoPath) {
-        throw new Error("Metadata från AI:n saknar nödvändig 'videoPath' för optimering.");
-      }
-      
-      updateChatMessages(chatId, prev => [...prev, { id: `info-${Date.now()}`, sender: MessageSender.AI, text: `Startar optimering av "${metadata.videoPath}"...`}]);
-      
-      const { result: toolResult } = await runAITool("optimize_video", { 
-          videoPath: metadata.videoPath, 
-          title: metadata.title,
-          description: metadata.description
+      setChatSessions(prev => {
+        const newSessions = prev.map(session =>
+          session.id === activeChatId
+            ? { ...session, messages: [...session.messages, aiMessage] }
+            : session
+        );
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
+        return newSessions;
       });
-
-      updateChatMessages(chatId, prev => [...prev, { id: `succ-${Date.now()}`, sender: MessageSender.AI, text: `✅ ${toolResult}`}]);
       setAiStatus('idle');
 
     } catch (error) {
-      const errorText = error instanceof Error ? error.message : "Ett okänt fel inträffade vid optimering.";
-      updateChatMessages(chatId, prev => [...prev, { id: `err-${Date.now()}`, sender: MessageSender.AI, text: `❌ Optimeringsprocessen misslyckades: ${errorText}`, isError: true }]);
-      setAiStatus('error');
+        console.error("Error getting AI response:", error);
+        const errorMessage: ChatMessage = {
+            id: `err-${Date.now()}`,
+            sender: MessageSender.AI,
+            text: `An error occurred while processing your request. Please check the connection and try again.`,
+            isError: true,
+        };
+        setChatSessions(prev => {
+            const newSessions = prev.map(session =>
+                session.id === activeChatId
+                  ? { ...session, messages: [...session.messages, errorMessage] }
+                  : session
+            );
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
+            return newSessions;
+        });
+        setAiStatus('error');
+    } finally {
+        setIsResponding(false);
+        if (thinkingIntervalRef.current) clearInterval(thinkingIntervalRef.current);
+        setThinkingMessage(null);
     }
   };
 
   const handleSelectChat = (id: string) => setActiveChatId(id);
-
+  
+  const handleRenameChat = (id: string, newTitle: string) => {
+    const newSessions = chatSessions.map(s => s.id === id ? {...s, title: newTitle} : s);
+    setChatSessions(newSessions);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
+  };
+  
   const handleDeleteChat = (id: string) => {
-    setChatSessions(prev => prev.filter(c => c.id !== id));
+    const newSessions = chatSessions.filter(s => s.id !== id);
+    setChatSessions(newSessions);
     if (activeChatId === id) {
-      const remainingChats = chatSessions.filter(c => c.id !== id);
-      setActiveChatId(remainingChats.length > 0 ? remainingChats[0].id : null);
+        setActiveChatId(newSessions.length > 0 ? newSessions[0].id : null);
+    }
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
+  };
+  
+  const handleShareChat = (id: string) => {
+    const sessionToShare = chatSessions.find(s => s.id === id);
+    if (sessionToShare) {
+        const jsonString = JSON.stringify(sessionToShare);
+        const encodedData = btoa(jsonString);
+        const url = `${window.location.origin}${window.location.pathname}#share=${encodedData}`;
+        navigator.clipboard.writeText(url).then(() => {
+            console.log("Share link copied to clipboard!");
+        });
     }
   };
+  
+  const handleRegenerate = (chatId: string, messageId: string) => {
+    const session = chatSessions.find(s => s.id === chatId);
+    if (!session) return;
+    
+    const messageIndex = session.messages.findIndex(m => m.id === messageId);
+    if (messageIndex < 1) return;
+    
+    const lastUserMessage = session.messages[messageIndex - 1];
+    if (lastUserMessage.sender !== MessageSender.USER) return;
 
-  const handleRenameChat = (id: string, newTitle: string) => {
-    setChatSessions(prev => prev.map(c => c.id === id ? { ...c, title: newTitle } : c));
+    setChatSessions(prev => {
+        const newSessions = prev.map(s => s.id === chatId ? {...s, messages: s.messages.slice(0, messageIndex - 1)} : s);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
+        return newSessions;
+    });
+    
+    setTimeout(() => {
+        handleSendMessage(lastUserMessage.text, lastUserMessage.attachment);
+    }, 100);
   };
   
   const handleFeedback = (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => {
-      updateChatMessages(chatId, (messages) =>
-        messages.map((msg) =>
-          msg.id === messageId ? { ...msg, feedback: msg.feedback === feedback ? null : feedback } : msg
-        )
-      );
-  };
-  
-  const handleRegenerate = async (chatId: string, messageId: string) => {
-      const chat = chatSessions.find(c => c.id === chatId);
-      if (!chat || isResponding) return;
-      
-      const messageIndex = chat.messages.findIndex(m => m.id === messageId);
-      if (messageIndex < 1) return;
-
-      const historyUpToMessage = chat.messages.slice(0, messageIndex - 1);
-      const userPromptMessage = chat.messages[messageIndex - 1];
-
-      updateChatMessages(chatId, chat.messages.slice(0, messageIndex));
-      setIsResponding(true);
-      setAiStatus('working');
-
-      try {
-        const aiResponse = await getAIResponse(userPromptMessage.text, historyUpToMessage, userPromptMessage.attachment);
-        const safetyScore = Math.floor(Math.random() * 45 + 55); // Random score between 55 and 100
-        const styles = ['Dialogic', 'Analytic', 'Mentor'];
-        const responseStyle = styles[Math.floor(Math.random() * styles.length)];
-        const allSuggestions = [ "Berätta mer om det.", "Ge mig en konkret åtgärdsplan.", "Finns det några risker med det här?" ];
-        const suggestedReplies = Math.random() > 0.5 ? allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 2) : undefined;
-        
-        const aiMessage: ChatMessage = {
-          id: `msg-${Date.now() + 1}`,
-          sender: MessageSender.AI,
-          text: aiResponse.message,
-          metadata: aiResponse,
-          experts: aiResponse.experts,
-          confidence: aiResponse.confidence,
-          reasoningTrace: aiResponse.reasoning_trace,
-          intent: aiResponse.intent,
-          responseStyle: responseStyle,
-          safetyScore: safetyScore,
-          suggestedReplies: suggestedReplies,
-          visionAnalysis: aiResponse.visionAnalysis,
-          audioAnalysis: aiResponse.audioAnalysis,
-          textAnalysis: aiResponse.textAnalysis,
-        };
-        updateChatMessages(chatId, prev => [...prev, aiMessage]);
-        setAiStatus('idle');
-      } catch (error) {
-        const errorMessage: ChatMessage = {
-          id: `err-${Date.now()}`,
-          sender: MessageSender.AI,
-          text: error instanceof Error ? error.message : "Ett okänt fel uppstod.",
-          isError: true,
-        };
-        updateChatMessages(chatId, prev => [...prev, errorMessage]);
-        setAiStatus('error');
-      } finally {
-        setIsResponding(false);
-      }
+    const newSessions = chatSessions.map(s => {
+        if (s.id === chatId) {
+            return {
+                ...s,
+                messages: s.messages.map(m => m.id === messageId ? {...m, feedback: m.feedback === feedback ? null : feedback} : m),
+            };
+        }
+        return s;
+    });
+    setChatSessions(newSessions);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSessions));
   };
 
   const handleToolClick = async (tool: AITool, promptText: string) => {
-    const userInput = prompt(promptText);
-    if (!userInput || !activeChatId) return;
-
-    let currentChat = activeChat;
-    if (!currentChat) {
-      currentChat = handleNewChat();
-    }
-    
-    const userMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      sender: MessageSender.USER,
-      text: `[Verktyg anropat: ${tool}] - ${userInput}`,
-    };
-    updateChatMessages(currentChat.id, prev => [...prev, userMessage]);
-    setIsResponding(true);
-    setAiStatus('working');
-
-    try {
-      const { result: toolResult } = await runAITool(tool, { prompt: userInput });
-      const aiMessage: ChatMessage = {
-        id: `msg-${Date.now() + 1}`,
-        sender: MessageSender.AI,
-        text: toolResult,
-        safetyScore: 99,
+      const userMessage: ChatMessage = {
+          id: `msg-${Date.now()}`,
+          sender: MessageSender.USER,
+          text: `[Tool invoked: ${tool}] ${promptText}`,
       };
-      updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
-      setAiStatus('idle');
-    } catch(error) {
-      const errorMessage: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: MessageSender.AI,
-        text: error instanceof Error ? error.message : `Fel vid körning av verktyg ${tool}.`,
-        isError: true,
-      };
-      updateChatMessages(currentChat.id, prev => [...prev, errorMessage]);
-      setAiStatus('error');
-    } finally {
-      setIsResponding(false);
-    }
+       setChatSessions(prev => prev.map(s => s.id === activeChatId ? {...s, messages: [...s.messages, userMessage]} : s));
+       setIsResponding(true);
+
+       try {
+            const result = await runAITool(tool, { prompt: promptText });
+            const aiMessage: ChatMessage = {
+                id: `msg-${Date.now() + 1}`,
+                sender: MessageSender.AI,
+                text: result.result,
+            };
+            setChatSessions(prev => prev.map(s => s.id === activeChatId ? {...s, messages: [...s.messages, aiMessage]} : s));
+       } catch (error: any) {
+           const errorMessage: ChatMessage = {
+                id: `err-${Date.now()}`,
+                sender: MessageSender.AI,
+                text: error.message,
+                isError: true,
+            };
+            setChatSessions(prev => prev.map(s => s.id === activeChatId ? {...s, messages: [...s.messages, errorMessage]} : s));
+       } finally {
+           setIsResponding(false);
+       }
   };
-    
-  const handleShareChat = (id: string) => {
-    const session = chatSessions.find(s => s.id === id);
-    if (session) {
-      const jsonString = JSON.stringify(session);
-      const encodedData = btoa(jsonString);
-      const url = `${window.location.origin}${window.location.pathname}#share=${encodedData}`;
-      navigator.clipboard.writeText(url);
-    }
+
+  const handleUploadToDrive = (chatId: string, messageId: string) => {
+    console.log("Uploading to Drive:", { chatId, messageId });
+    alert("Simulating upload to Google Drive. Check console for details.");
   };
 
   if (isLoading) {
     return (
-        <div className="w-full h-screen flex items-center justify-center">
-            <h1 className="text-2xl font-bold text-shimmer">Laddar GPT-5 Kärnan...</h1>
-        </div>
+      <div className="flex h-screen w-screen items-center justify-center bg-gray-900">
+        <i className="fa-solid fa-spinner fa-spin text-4xl text-cyan-400"></i>
+      </div>
     );
   }
-  
-  const aiStatusMessage = {
-      working: 'GPT-5 resonerar...',
-      error: 'Ett fel uppstod i GPT-5 kärnan',
-  }[aiStatus] || null;
 
   return (
-    <div className="relative">
-       <div className="absolute top-0 left-0 right-0 z-50 text-center text-sm">
-            {!online && (
-              <div className="bg-yellow-600 text-black py-1">
-                Offline-läge – arbetar med senast sparade data
-              </div>
-            )}
-            {online && aiStatusMessage && (
-                <div className={`py-1 ${aiStatus === 'error' ? 'bg-red-600 text-white' : 'bg-blue-900/80 text-blue-300'}`}>
-                    <i className={`fa-solid ${aiStatus === 'working' ? 'fa-cog fa-spin' : 'fa-triangle-exclamation'} mr-2`}></i>
-                    {aiStatusMessage}
-                </div>
-            )}
-       </div>
-      <div className={`flex h-screen max-h-screen bg-gray-900 text-gray-100 ${(aiStatus !== 'idle' || !online) ? 'pt-6' : ''}`}>
-        <Sidebar onSendMessage={handleSendMessage} onToolClick={handleToolClick} />
-        <main className="flex-1 flex flex-col relative">
-            <header className="flex items-center justify-between p-3 border-b border-cyan-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
-                <ChatSelector 
-                  sessions={chatSessions}
-                  activeId={activeChatId}
-                  onSelectChat={handleSelectChat}
-                  onNewChat={handleNewChat}
-                  onRenameChat={handleRenameChat}
-                  onDeleteChat={handleDeleteChat}
-                  onShareChat={handleShareChat}
-                  startRenamingId={startRenamingId}
-                  onRenameComplete={() => setStartRenamingId(null)}
-                />
-                <h1 className="text-xl font-bold text-shimmer hidden md:block" style={{ fontFamily: 'var(--font-heading)' }}>
-                  GPT-5 Core Interface
-                </h1>
-                <div className="flex items-center space-x-2 md:space-x-4">
-                  <TemporalConsciousnessStatus state={temporalState} />
-                  <SyntheticRealityFieldStatus state={srfState} />
-                  <InteractivePerceptionStatus state={interactivePerception} />
-                  <UnifiedIntelligenceStatus state={unifiedState} />
-                  <EmotionEngineStatus state={emotionEngineState} />
-                  <MemoryStatus memory={longTermMemory} />
-                  <CognitiveSyncStatus state={cognitiveSyncState} log={adaptationLog} />
-                  <CognitiveEconomyStatus state={cognitiveEconomy} />
-                  <AgentStatus agents={agents} />
-                  <KnowledgeBaseStatus knowledgeBase={knowledgeBase} />
-                  <EvolutionStatus ledger={evolutionLedger} />
-                  <GovernanceStatus state={ethicalState} />
-                  <CollectiveIntelligenceStatus state={collectiveIntelligence} />
-                  <CulturalIntelligenceStatus state={culturalIntelligence} />
-                  <LinguisticEvolutionStatus state={linguisticEvolution} />
-                  <AdaptiveCreativityStatus state={adaptiveCreativity} />
-                  <EmergentAgencyStatus state={emergentAgency} />
-                  <SelfAwarenessStatus state={selfAwarenessState} />
-                  <ForesightStatus state={foresightState} />
-                  <CausalityStatus state={causalityState} />
-                  <ReasoningLoopStatus state={reasoningLoopState} />
-                </div>
-            </header>
-            {activeChat ? (
-              <ChatInterface 
-                  chatId={activeChat.id}
-                  messages={activeChat.messages} 
-                  isLoading={isResponding}
-                  onRegenerate={handleRegenerate}
-                  onFeedback={handleFeedback}
-                  onUploadToDrive={handleUploadToDrive}
-                  isReadOnly={!!sharedSession}
-                  onSendMessage={handleSendMessage}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <p>Välj en session eller starta en ny.</p>
-                </div>
-              </div>
-            )}
-            <InputBar onSendMessage={handleSendMessage} isLoading={isResponding} />
-        </main>
-      </div>
+    <div className="flex h-screen w-screen bg-gray-950 text-white font-sans overflow-hidden app-bg">
+      <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+      <Sidebar 
+        onSendMessage={handleSendMessage}
+        onToolClick={handleToolClick}
+        onOpenCodex={() => setIsCodexOpen(true)}
+      />
+      <main className="flex-1 flex flex-col bg-black/20 backdrop-blur-sm relative">
+        <header className="flex-shrink-0 flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
+          <ChatSelector 
+            sessions={chatSessions}
+            activeId={activeChatId}
+            onSelectChat={handleSelectChat}
+            onNewChat={() => handleNewChat()}
+            onRenameChat={handleRenameChat}
+            onDeleteChat={handleDeleteChat}
+            onShareChat={handleShareChat}
+            startRenamingId={startRenamingId}
+            onRenameComplete={() => setStartRenamingId(null)}
+          />
+          <div className="flex items-center gap-3">
+             <ModeSwitcher mode={mode} onModeChange={setMode} />
+             {mode === 'gpt5' && <ThinkingControl value={thinkingDepth} onChange={setThinkingDepth} />}
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-2">
+            <EvolutionStatus ledger={evolutionLedger} />
+            <KnowledgeBaseStatus knowledgeBase={knowledgeBase} />
+            <AgentStatus agents={agents} />
+            <GovernanceStatus state={ethicalState} />
+            <CognitiveSyncStatus state={cognitiveSyncState} log={adaptationLog} />
+            <MemoryStatus memory={longTermMemory} />
+            <UnifiedIntelligenceStatus state={unifiedState} />
+            <CognitiveEconomyStatus state={cognitiveEconomy} />
+            <InteractivePerceptionStatus state={interactivePerception} />
+            <EmotionEngineStatus state={emotionEngineState} />
+            <CollectiveIntelligenceStatus state={collectiveIntelligence} />
+            <CulturalIntelligenceStatus state={culturalIntelligence} />
+            <LinguisticEvolutionStatus state={linguisticEvolution} />
+            <AdaptiveCreativityStatus state={adaptiveCreativity} />
+            <EmergentAgencyStatus state={emergentAgency} />
+            <SelfAwarenessStatus state={selfAwarenessState} />
+            <ForesightStatus state={foresightState} />
+            <CausalityStatus state={causalityState} />
+            <ReasoningLoopStatus state={reasoningLoopState} />
+            <SyntheticRealityFieldStatus state={srfState} />
+            <TemporalConsciousnessStatus state={temporalState} />
+            <CognitiveEvolutionStatus state={cognitiveEvolution} />
+            <TranscendentEthicsStatus state={transcendentEthics} />
+            <SymbioticIntelligenceStatus state={symbioticIntelligence} />
+            <SymbioticNetworkStatus state={symbioticNetwork} />
+            <CollectiveSingularityStatus state={collectiveSingularity} />
+            <ReintegrationStatus state={reintegrationState} />
+            <RenaissanceStatus state={renaissanceState} />
+          </div>
+        </header>
+
+        <ChatInterface 
+          chatId={activeChatId || ''}
+          messages={activeChat?.messages || []}
+          isLoading={isResponding}
+          onRegenerate={handleRegenerate}
+          onFeedback={handleFeedback}
+          onUploadToDrive={handleUploadToDrive}
+          onSendMessage={handleSendMessage}
+          isReadOnly={!!sharedSession}
+          mode={mode}
+          thinkingMessage={thinkingMessage}
+        />
+        
+        {!sharedSession && (
+          <InputBar onSendMessage={handleSendMessage} isLoading={isResponding} />
+        )}
+      </main>
+      <CodexModal isOpen={isCodexOpen} onClose={() => setIsCodexOpen(false)} />
     </div>
   );
 };

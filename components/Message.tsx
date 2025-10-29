@@ -112,7 +112,8 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
   const [showTrace, setShowTrace] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
 
-  const structuredContent = !isUser && !isError ? parseStructuredResponse(displayedText) : null;
+  const isProResponse = !isUser && !isError && message.metadata?.mode === 'pro';
+  const structuredContent = !isUser && !isError && !isProResponse ? parseStructuredResponse(displayedText) : null;
   const hasSensoryData = !isUser && !isError && (visionAnalysis || audioAnalysis || textAnalysis);
   
   useEffect(() => {
@@ -130,10 +131,10 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
       } else {
         clearInterval(typingInterval);
       }
-    }, 15);
+    }, isProResponse ? 5 : 15); // Faster typing for PRO mode
 
     return () => clearInterval(typingInterval);
-  }, [text, id, isUser, isError]);
+  }, [text, id, isUser, isError, isProResponse]);
 
 
   useEffect(() => {
@@ -191,21 +192,146 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
     bubbleClasses = isToolCall
       ? 'bg-gray-700/50 backdrop-blur-sm text-cyan-200 rounded-br-none border border-cyan-500/50'
       : 'bg-gradient-to-br from-purple-500 to-fuchsia-500 text-white rounded-br-none';
+  } else if (isProResponse) {
+    bubbleClasses = 'bg-gradient-to-br from-indigo-900 via-gray-900 to-gray-900 border-cyan-500/80 rounded-bl-none border';
   } else {
     bubbleClasses = message.isError
       ? 'bg-red-900/80 backdrop-blur-sm text-red-200 rounded-bl-none border border-red-500/80'
       : `${getBubbleStyle(responseStyle)} text-gray-200 rounded-bl-none border`;
   }
 
-  const hoverShadowClass = message.isError ? 'hover:shadow-red-900/60' : (isToolCall ? 'hover:shadow-cyan-900/60' : 'hover:shadow-purple-900/50');
+  const hoverShadowClass = message.isError ? 'hover:shadow-red-900/60' : (isToolCall ? 'hover:shadow-cyan-900/60' : (isProResponse ? 'hover:shadow-indigo-900/60' : 'hover:shadow-purple-900/50'));
   const aiGlowClass = !isUser && message.id !== 'initial-welcome' && !message.isError ? 'ai-message-glow' : '';
   
   const hasAnalysisData = !isUser && !isError && (intent || (experts && experts.length > 0) || confidence || safetyScore);
   const hasTrace = reasoningTrace && reasoningTrace.length > 0;
-  const canInteract = !isUser && !isError && message.id !== 'initial-welcome' && !isReadOnly;
+  const canInteract = !isUser && !isError && message.id !== 'initial-welcome' && !isReadOnly && !isProResponse;
   const hasUploadAction = uploadMetadata && !isReadOnly;
-  const containerPadding = (canInteract || hasUploadAction || hasAnalysisData) ? 'pb-12' : '';
+  const containerPadding = (canInteract || hasUploadAction || hasAnalysisData || isProResponse) ? 'pb-12' : '';
 
+
+  if (isProResponse) {
+    const { tool_output, notes, confidence: proConfidence, thinkingTrace } = message.metadata;
+    const { titles, hooks, plan, winner, A, B } = tool_output || {};
+
+    return (
+      <div className={`flex-col flex justify-start message-enter group relative pb-12`}>
+        <div className={`p-4 rounded-xl max-w-md md:max-w-xl lg:max-w-2xl shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${bubbleClasses} ${hoverShadowClass}`}>
+          <div
+            className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-p:font-semibold prose-p:text-gray-100"
+            dangerouslySetInnerHTML={createMarkup(displayedText)}
+          />
+
+          {winner && A && B && (
+            <div className="mt-4 pt-3 border-t border-cyan-500/20">
+              <h4 className="text-xs font-semibold text-cyan-300 mb-2" style={{fontFamily: 'var(--font-heading)'}}>
+                <i className="fa-solid fa-table-list mr-2"></i>Comparison Details
+              </h4>
+              <div className="grid grid-cols-2 gap-2 text-center text-sm bg-black/20 p-2 rounded-md">
+                <div>
+                    <div className="font-bold text-gray-300">Video A</div>
+                    <div className="font-mono text-xl text-white">{A.ctr.toFixed(1)}%</div>
+                    <div className="text-xs text-gray-500">CTR</div>
+                </div>
+                 <div>
+                    <div className="font-bold text-gray-300">Video B</div>
+                    <div className="font-mono text-xl text-white">{B.ctr.toFixed(1)}%</div>
+                    <div className="text-xs text-gray-500">CTR</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {titles && Array.isArray(titles) && (
+            <div className="mt-4 pt-3 border-t border-cyan-500/20">
+               <h4 className="text-xs font-semibold text-cyan-300 mb-2" style={{fontFamily: 'var(--font-heading)'}}>
+                <i className="fa-solid fa-i-cursor mr-2"></i>Title Suggestions
+              </h4>
+               <ol className="prose prose-sm prose-invert list-decimal pl-5 space-y-1">
+                  {titles.map((t: string) => <li key={t}>{t}</li>)}
+               </ol>
+            </div>
+          )}
+
+          {hooks && Array.isArray(hooks) && (
+             <div className="mt-4 pt-3 border-t border-cyan-500/20">
+               <h4 className="text-xs font-semibold text-cyan-300 mb-2" style={{fontFamily: 'var(--font-heading)'}}>
+                <i className="fa-solid fa-image mr-2"></i>Thumbnail Hooks
+              </h4>
+               <ul className="prose prose-sm prose-invert list-disc pl-5 space-y-1">
+                  {hooks.map((h: string) => <li key={h}>{h}</li>)}
+               </ul>
+            </div>
+          )}
+          
+          {plan && Array.isArray(plan) && (
+            <div className="mt-4 pt-3 border-t border-cyan-500/20">
+                <h4 className="text-xs font-semibold text-cyan-300 mb-2" style={{fontFamily: 'var(--font-heading)'}}>
+                    <i className="fa-solid fa-calendar-days mr-2"></i>7-Day Post Plan
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    {plan.map((p: any) => (
+                        <div key={p.day} className="bg-black/20 p-2 rounded-md text-center">
+                            <div className="font-bold text-white">{p.day}</div>
+                            <div className={`font-semibold ${p.type === 'Long-form' ? 'text-purple-300' : p.type === 'Short' ? 'text-cyan-300' : 'text-amber-300'}`}>{p.type}</div>
+                            <div className="text-gray-400 truncate" title={p.topic}>{p.topic}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+          )}
+
+          {notes && (
+            <div className="mt-4 pt-3 border-t border-cyan-500/20 text-xs text-gray-400 italic">
+              <i className="fa-solid fa-note-sticky mr-2"></i> {notes}
+            </div>
+          )}
+        </div>
+
+        <div className="absolute bottom-1 left-0 flex items-center space-x-2 w-full pr-2">
+            {thinkingTrace && thinkingTrace.length > 0 && (
+                <div className="group/trace relative">
+                    <button className="flex items-center text-xs text-gray-400 hover:text-white transition-colors bg-gray-900/70 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1.5 opacity-80 group-hover:opacity-100">
+                        <i className="fa-solid fa-code-branch mr-1.5"></i>
+                        <span>{thinkingTrace.length} Steps</span>
+                    </button>
+                    <div className="absolute bottom-full mb-2 hidden group-hover/trace:block w-64 bg-gray-950 border border-cyan-500/30 rounded-lg p-3 shadow-lg text-xs font-mono text-cyan-200 z-10 space-y-1">
+                        {thinkingTrace.map((trace: string, index: number) => (
+                            <p key={index}>{trace}</p>
+                        ))}
+                    </div>
+                </div>
+            )}
+            <div className="flex-grow"></div>
+            <div className="text-xs text-cyan-300/80 bg-gray-900/70 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1.5 flex items-center space-x-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                <div title="PRO Mode" className="flex items-center">
+                    <i className="fa-solid fa-bolt-lightning mr-1.5"></i>
+                    <span>PRO MODE</span>
+                </div>
+                {tool_output?.tool && (
+                    <div title={`Tool: ${tool_output.tool}`} className="flex items-center">
+                        <i className="fa-solid fa-terminal mr-1.5"></i>
+                        <span className="capitalize">{tool_output.tool}</span>
+                    </div>
+                )}
+                {proConfidence && (() => {
+                    const confidenceInfo = getConfidenceInfo(proConfidence);
+                    return (
+                        <div title={`Confidence: ${Math.round(proConfidence * 100)}%`} className={`flex items-center ${confidenceInfo.color}`}>
+                            <i className={`${confidenceInfo.icon} mr-1.5`}></i>
+                            <span>{confidenceInfo.text}</span>
+                        </div>
+                    );
+                })()}
+                 <div title={`Execution Time: ${message.metadata.exec_time.toFixed(3)}s`} className="flex items-center">
+                    <i className="fa-solid fa-stopwatch mr-1.5"></i>
+                    <span>{(message.metadata.exec_time * 1000).toFixed(0)}ms</span>
+                </div>
+            </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex-col ${containerClasses} message-enter group relative ${containerPadding}`}>

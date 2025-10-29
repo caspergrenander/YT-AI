@@ -6,6 +6,7 @@ import { AITool } from '../types';
 interface SidebarProps {
   onSendMessage: (prompt: string) => void;
   onToolClick: (tool: AITool, promptText: string) => void;
+  onOpenCodex: () => void;
 }
 
 const ExpertButton: React.FC<{ text: string; icon: string; onClick: () => void; accentColor: 'purple' | 'cyan' | 'amber' | 'rose' }> = ({ text, icon, onClick, accentColor }) => {
@@ -29,7 +30,7 @@ const ExpertButton: React.FC<{ text: string; icon: string; onClick: () => void; 
 }
 
 
-const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick, onOpenCodex }) => {
 
   const expertSections = [
       {
@@ -76,6 +77,16 @@ const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick }) => {
 
   return (
     <aside className="w-64 md:w-80 h-full bg-gray-950/50 backdrop-blur-md border-r border-cyan-500/20 p-4 flex-col hidden sm:flex overflow-y-auto">
+      <div className="mb-6">
+         <button
+            onClick={onOpenCodex}
+            className="group w-full text-left p-3 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-cyan-500/10 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-amber-400 flex items-center border border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/20"
+        >
+            <i className="fa-solid fa-book-journal-whills w-6 text-center mr-2 text-amber-300 transition-transform duration-300 group-hover:scale-110"></i>
+            <span className="font-semibold text-amber-200" style={{fontFamily: 'var(--font-heading)'}}>Codex of the Fifty</span>
+        </button>
+      </div>
+      
       {expertSections.map(section => (
         <div className="mb-8" key={section.title}>
             <h2 className={`text-lg font-semibold mb-4 text-${section.accent}-400 text-glow`} style={{ fontFamily: 'var(--font-heading)', '--glow-color': `var(--tw-color-${section.accent}-400)` } as React.CSSProperties}>

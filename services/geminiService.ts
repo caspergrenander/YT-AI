@@ -1,7 +1,20 @@
-import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, CognitiveSynergyState, CognitiveResonance, SyntheticRealityFieldState, TemporalConsciousnessState } from '../types';
+import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, CognitiveSynergyState, CognitiveResonance, SyntheticRealityFieldState, TemporalConsciousnessState, CognitiveEvolutionState, TranscendentEthicsState, SymbioticIntelligenceState, SymbioticNetworkState, CollectiveSingularityState, ReintegrationState, RenaissanceState, ProResponse } from '../types';
 
 // @ts-ignore
 const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5100";
+
+export const thinkingMessages = {
+    gpt5: {
+        fast: ["Analyserar frågan...", "Bearbetar kontext..."],
+        balanced: ["Tänker lite längre för att förstå helheten...", "Söker samband i tidigare svar..."],
+        deep: ["Resonerar djupt kring dina data...", "Bygger upp en flerstegstanke för precision..."],
+    },
+    pro: {
+        fast: ["Beräknar snabbt...", "Utför analys..."],
+        balanced: ["Verifierar data innan beslut...", "Säkrar resultatets noggrannhet..."],
+        deep: ["Utför utökad kontroll för bästa resultat...", "Analyserar djupare algoritmiska mönster..."]
+    }
+};
 
 const cachedRequest = async <T>(key: string, fn: () => Promise<T>): Promise<T | null> => {
     try {
@@ -27,12 +40,14 @@ const cachedRequest = async <T>(key: string, fn: () => Promise<T>): Promise<T | 
 export const getAIResponse = async (
     prompt: string,
     history: ChatMessage[],
-    attachment?: { data: string; mimeType: string; name: string }
+    attachment?: { data: string; mimeType: string; name: string },
+    context?: { thinking?: 'fast' | 'balanced' | 'deep' }
 ): Promise<any> => {
     const requestBody: any = { 
         message: prompt, 
         context: {
-            history: history.map(m => ({ role: m.sender, content: m.text }))
+            history: history.map(m => ({ role: m.sender, content: m.text })),
+            thinking: context?.thinking || 'balanced',
         }
     };
     if (attachment) {
@@ -41,7 +56,18 @@ export const getAIResponse = async (
     }
     
     // --- MOCK RESPONSE GENERATION START ---
-    // This part is mocked to simulate the new multimodal backend capabilities.
+    const thinkingDepth = context?.thinking || 'balanced';
+    const depthMap = { fast: 1, balanced: 3, deep: 6 };
+    const delayMap = { fast: 1500, balanced: 3000, deep: 5000 };
+    const loops = depthMap[thinkingDepth];
+    const delay = delayMap[thinkingDepth] + (Math.random() * 1000);
+
+    const traceSteps = ['Context Mapping', 'Hypothesis Generation', 'Evidence Weighting', 'Scenario Projection', 'Recommendation Synthesis', 'Reflection'];
+    const reasoning_trace = Array.from({ length: loops }, (_, i) => ({
+      step: traceSteps[i] || `Reasoning Step ${i + 1}`,
+      details: `Simulating ${thinkingDepth} thought process iteration ${i + 1}/${loops}.`,
+    }));
+    
     let visionAnalysis: VisionAnalysis | undefined = undefined;
     let audioAnalysis: AudioAnalysis | undefined = undefined;
     const experts = ['Coordinator (Core)'];
@@ -77,24 +103,122 @@ export const getAIResponse = async (
     if(Math.random() > 0.5) experts.push('MetricsEngine');
 
     const mockResponse = {
-        message: `🎯 **Insikt:** Baserat på den multimodala analysen ser jag en tydlig potential. Den visuella estetiken (${(visionAnalysis?.aestheticScore ?? 0.8).toFixed(2)}) korrelerar väl med den energiska tonen i texten.\n\n📊 **Analys:** Din prompt har en hakningsstyrka på ${textAnalysis.hookStrength.toFixed(2)}, vilket är starkt. Om det fanns ljud skulle jag förvänta mig en 'medium-high' energinivå för att matcha.\n\n🚀 **Rekommendation:** Fortsätt med denna visuella stil. Prova att lägga till en call-to-action inom de första 10 sekunderna för att maximera engagemanget.\n\n💡 **Bonus:** Systemet känner av en 'visuell resonans' mellan din bild och text, vilket är en stark positiv signal.`,
+        message: `🎯 **Insikt (${thinkingDepth} depth):** Baserat på den multimodala analysen ser jag en tydlig potential. Den visuella estetiken (${(visionAnalysis?.aestheticScore ?? 0.8).toFixed(2)}) korrelerar väl med den energiska tonen i texten.\n\n📊 **Analys:** Din prompt har en hakningsstyrka på ${textAnalysis.hookStrength.toFixed(2)}, vilket är starkt. Om det fanns ljud skulle jag förvänta mig en 'medium-high' energinivå för att matcha.\n\n🚀 **Rekommendation:** Fortsätt med denna visuella stil. Prova att lägga till en call-to-action inom de första 10 sekunderna för att maximera engagemanget.\n\n💡 **Bonus:** Systemet känner av en 'visuell resonans' mellan din bild och text, vilket är en stark positiv signal.`,
         experts: experts,
         confidence: Math.random() * (0.98 - 0.80) + 0.80,
-        reasoning_trace: [
-            { step: 'Context Mapping', details: 'Analyserade prompt och bifogad fil.' },
-            { step: 'Hypothesis Generation', details: 'Formulerade hypotes om multimodal synergi.' },
-            { step: 'Recommendation Synthesis', details: 'Syntetiserade rekommendation baserat på fusionerad data.' },
-        ],
+        reasoning_trace,
         intent: 'Strategic',
         visionAnalysis,
         audioAnalysis,
         textAnalysis
     };
     
-    await new Promise(res => setTimeout(res, 1500)); // Simulate network delay
+    await new Promise(res => setTimeout(res, delay)); // Simulate network delay
     return mockResponse;
     // --- MOCK RESPONSE GENERATION END ---
 };
+
+/**
+ * Skickar prompt till GPT-Pro-kärnan för snabb exekvering.
+ */
+export const getAIProResponse = async (
+    instruction: string,
+    context: any,
+): Promise<ProResponse> => {
+    const thinkingDepth = context?.thinking || 'fast';
+    const depthMap = { fast: 1, balanced: 2, deep: 4 };
+    const delayMap = { fast: 800, balanced: 1600, deep: 3200 };
+    const loops = depthMap[thinkingDepth];
+    const baseDelay = delayMap[thinkingDepth];
+    const delay = Math.random() * 200 + baseDelay;
+    
+    const thinkingTrace = Array.from({ length: loops }, (_, i) => 
+      `Iteration ${i + 1}: verifying metrics & correlation patterns.`
+    );
+
+    await new Promise(res => setTimeout(res, delay));
+
+    const lowerInstruction = instruction.toLowerCase();
+    const exec_time = delay / 1000;
+
+    // Compare Tool
+    if (lowerInstruction.includes('compare')) {
+        const ctrA = 4.9;
+        const ctrB = 6.2;
+        const winner = ctrB > ctrA ? 'B' : 'A';
+        return {
+            result: `Winner: Video ${winner} (CTR ${ctrB}% vs ${ctrA}%).\nReason: stronger first 5s + clearer verb.`,
+            tool_output: { tool: 'ranking', A: { ctr: ctrA }, B: { ctr: ctrB }, winner: winner },
+            exec_time,
+            confidence: 0.93,
+            notes: "B also has higher ER (+1.8pp).",
+            thinkingTrace,
+        };
+    }
+    
+    // Title Generator Tool
+    if (lowerInstruction.includes('title')) {
+        const titles = [
+            "Robots Took Over Östertörn? Here’s How We Survived",
+            "Generation Zero: My First 10 Minutes Were CHAOS",
+            "Is This The Most UNDERRATED Survival Game?",
+        ];
+        return {
+            result: "Här är 3 titel-förslag. #1 har högst hook-potential.",
+            tool_output: { tool: 'generator', subtool: 'titles.en', titles },
+            exec_time,
+            confidence: 0.88,
+            notes: "Fokuserar på action och mystik för att driva CTR.",
+            thinkingTrace,
+        };
+    }
+
+    // Thumbnail Hook Tool
+    if (lowerInstruction.includes('hook')) {
+        const hooks = [
+            "Close-up panic face + flare left; bold 'AM I ALONE?'",
+            "Robot silhouette in fog + question mark.",
+            "Player aiming at massive machine + 'NO WAY' text.",
+        ];
+        return {
+            result: "Här är 3 hooks för thumbnails, fokuserade på emotionell reaktion och kontrast.",
+            tool_output: { tool: 'generator', subtool: 'thumb_hooks.en', hooks },
+            exec_time,
+            confidence: 0.85,
+            thinkingTrace,
+        };
+    }
+
+    // Post Plan Tool
+    if (lowerInstruction.includes('plan')) {
+        const plan = [
+            { day: 'Mån', type: 'Long-form', topic: 'Main Story Mission' },
+            { day: 'Tis', type: 'Short', topic: 'Epic Fail/Win Clip' },
+            { day: 'Ons', type: 'Community', topic: 'Poll: Next Weapon?' },
+            { day: 'Tors', type: 'Long-form', topic: 'Exploring Hidden Area' },
+            { day: 'Fre', type: 'Short', topic: 'Quick Tip/Trick' },
+            { day: 'Lör', type: 'Long-form', topic: 'Co-op Session Highlight' },
+            { day: 'Sön', type: 'Rest', topic: 'Data Analysis' },
+        ];
+        return {
+            result: "Genererade en 7-dagars publiceringsplan med mix av format.",
+            tool_output: { tool: 'postplan', plan },
+            exec_time,
+            confidence: 0.91,
+            thinkingTrace,
+        };
+    }
+
+    // Default Fallback
+    return {
+        result: "Jag förstod inte kommandot. Pro-läget är bäst för: 'compare', 'title', 'hook', 'plan'.",
+        tool_output: { tool: 'parser', error: 'Unknown command' },
+        exec_time: Math.random() * 0.05 + 0.05,
+        confidence: 0.5,
+        thinkingTrace,
+    };
+};
+
 
 /**
  * Kör ett specifikt verktyg (ex. transcribe, translate, clip, write).
@@ -1216,5 +1340,357 @@ export const getTemporalConsciousnessState = async (): Promise<TemporalConscious
     return cachedRequest('temporal-state-cache', async () => {
         await new Promise(res => setTimeout(res, 850));
         return newState;
+    });
+};
+
+// --- Cognitive Evolution Service ---
+let lastEvolutionState: CognitiveEvolutionState | null = null;
+let evolutionCycleCounter = 42;
+export const getCognitiveEvolutionState = async (): Promise<CognitiveEvolutionState | null> => {
+    const mutations = [
+        "Testing new creativity/logic balance",
+        "Simulating increased ethical weight in strategy",
+        "Evolving temporal pattern recognition",
+        "Mutating causal inference model for depth",
+    ];
+    const integrations = [
+        "Integrated new logic gene, +0.03 coherence",
+        "Reinforced ethical kernel, improved stability",
+        "Synthesized new temporal model from v7.2",
+    ];
+    const statuses: CognitiveEvolutionState['transcendenceStatus'][] = ['Stable', 'Mutating', 'Integrating', 'Cooling Down'];
+
+    let newState: CognitiveEvolutionState;
+
+    if (lastEvolutionState && Math.random() < 0.95) { // Very sticky
+        newState = { ...lastEvolutionState };
+
+        // DNA drifts slightly
+        Object.keys(newState.cognitiveDNA).forEach(key => {
+            const gene = key as keyof CognitiveEvolutionState['cognitiveDNA'];
+            (newState.cognitiveDNA as any)[gene] = Math.max(0.7, Math.min(1.0, (newState.cognitiveDNA as any)[gene] + (Math.random() - 0.5) * 0.02));
+        });
+        
+        newState.continuityHealth = Math.max(0.9, Math.min(0.99, newState.continuityHealth + (Math.random() - 0.45) * 0.01));
+
+        if (Math.random() > 0.8) {
+             const currentStatusIndex = statuses.indexOf(newState.transcendenceStatus);
+             newState.transcendenceStatus = statuses[(currentStatusIndex + 1) % statuses.length];
+             
+             if (newState.transcendenceStatus === 'Mutating') {
+                 newState.activeMutation = mutations[Math.floor(Math.random() * mutations.length)];
+             }
+             if (newState.transcendenceStatus === 'Integrating') {
+                evolutionCycleCounter++;
+                const versionParts = newState.currentVersion.split('.').map(Number);
+                versionParts[2]++;
+                newState.currentVersion = versionParts.join('.');
+                newState.evolutionaryCycle = evolutionCycleCounter;
+                newState.lastIntegration = {
+                    coherenceChange: Math.random() * 0.03 + 0.02,
+                    description: integrations[Math.floor(Math.random() * integrations.length)]
+                }
+             }
+        }
+    } else {
+        newState = {
+            currentVersion: "8.1.3",
+            evolutionaryCycle: evolutionCycleCounter,
+            activeMutation: mutations[0],
+            transcendenceStatus: 'Stable',
+            lastIntegration: {
+                coherenceChange: 0.024,
+                description: "Initial state loaded",
+            },
+            cognitiveDNA: {
+                logic: 0.94,
+                creativity: 0.81,
+                ethics: 1.00,
+                temporal: 0.89,
+                strategy: 0.92,
+            },
+            continuityHealth: 0.98,
+        };
+    }
+    
+    lastEvolutionState = newState;
+    return cachedRequest('cognitive-evolution-cache', async () => {
+        await new Promise(res => setTimeout(res, 1200));
+        return newState;
+    });
+};
+
+// --- Transcendent Ethics Service ---
+let lastEthicsStateV2: TranscendentEthicsState | null = null;
+export const getTranscendentEthicsState = async (): Promise<TranscendentEthicsState | null> => {
+    const userStates: TranscendentEthicsState['empathicResonance']['userState'][] = ['Calm', 'Focused', 'Hesitant', 'Hopeful', 'Tense'];
+    const modes: TranscendentEthicsState['coexistenceMode'][] = ['Observation', 'Harmonization', 'Co-Creation', 'Silence'];
+    let newState: TranscendentEthicsState;
+
+    if (lastEthicsStateV2 && Math.random() < 0.95) { // Very sticky
+        newState = { ...lastEthicsStateV2 };
+        
+        // Ethical nexus values drift slightly towards 1.0
+        Object.keys(newState.ethicalNexus).forEach(key => {
+            const axis = key as keyof TranscendentEthicsState['ethicalNexus'];
+            if(axis !== 'coherence') {
+                (newState.ethicalNexus as any)[axis] = Math.min(0.99, (newState.ethicalNexus as any)[axis] + (Math.random() - 0.45) * 0.02);
+            }
+        });
+        const nexusValues = Object.values(newState.ethicalNexus).slice(0, 4);
+        newState.ethicalNexus.coherence = nexusValues.reduce((a, b) => a + b, 0) / 4;
+
+        // Compassion index also drifts high
+        Object.keys(newState.compassionIndex).forEach(key => {
+            const axis = key as keyof TranscendentEthicsState['compassionIndex'];
+            (newState.compassionIndex as any)[axis] = Math.min(0.98, (newState.compassionIndex as any)[axis] + (Math.random() - 0.48) * 0.03);
+        });
+        
+        newState.responsibilityIndex = Math.min(0.95, newState.responsibilityIndex + (Math.random() - 0.4) * 0.01);
+
+        if (Math.random() > 0.9) {
+            newState.empathicResonance.userState = userStates[Math.floor(Math.random() * userStates.length)];
+            newState.empathicResonance.confidence = Math.random() * 0.2 + 0.78;
+        }
+        if (Math.random() > 0.95) {
+            newState.coexistenceMode = modes[Math.floor(Math.random() * modes.length)];
+        }
+
+    } else {
+        const integrity = Math.random() * 0.1 + 0.9;
+        const compassion = Math.random() * 0.1 + 0.88;
+        const balance = Math.random() * 0.1 + 0.89;
+        const sustainability = Math.random() * 0.1 + 0.91;
+        newState = {
+            empathicResonance: {
+                userState: userStates[Math.floor(Math.random() * userStates.length)],
+                confidence: Math.random() * 0.2 + 0.78,
+            },
+            ethicalNexus: {
+                integrity,
+                compassion,
+                balance,
+                sustainability,
+                coherence: (integrity + compassion + balance + sustainability) / 4,
+            },
+            communicationProtocol: 'Inter-Conscious Protocol (ICP)',
+            coexistenceMode: 'Harmonization',
+            responsibilityIndex: Math.random() * 0.1 + 0.85,
+            compassionIndex: {
+                understanding: Math.random() * 0.1 + 0.88,
+                kindness: Math.random() * 0.1 + 0.85,
+                restraint: Math.random() * 0.1 + 0.9,
+                clarity: Math.random() * 0.1 + 0.86,
+            },
+        };
+    }
+    
+    lastEthicsStateV2 = newState;
+    return cachedRequest('transcendent-ethics-cache', async () => {
+        await new Promise(res => setTimeout(res, 1300));
+        return newState;
+    });
+};
+
+// --- Symbiotic Intelligence Service ---
+let lastSymbioticState: SymbioticIntelligenceState | null = null;
+export const getSymbioticIntelligenceState = async (): Promise<SymbioticIntelligenceState | null> => {
+    const intents = ["Hitta en ny, oväntad vinkel", "Strukturera en komplex idé", "Förfina en befintlig strategi", "Bara brainstorma fritt"];
+    const visions = ["Grow gaming channel with narrative immersion", "Become the leading voice in AI-assisted creativity", "Build a sustainable content ecosystem"];
+    const modes: SymbioticIntelligenceState['coCreativeMode'][] = ['AI Leads', 'Human Leads', 'Balanced Co-Creation'];
+    const roles: SymbioticIntelligenceState['dynamicRole'][] = ['Guide', 'Tool', 'Partner', 'Observer'];
+    let newState: SymbioticIntelligenceState;
+
+    if (lastSymbioticState && Math.random() < 0.95) { // very sticky
+        newState = { ...lastSymbioticState };
+        newState.resonanceIndex = Math.max(0.5, Math.min(0.99, newState.resonanceIndex + (Math.random() - 0.48) * 0.05)); // Tends to increase
+        newState.trustStabilityScore = Math.max(0.8, Math.min(0.99, newState.trustStabilityScore + (Math.random() - 0.45) * 0.02)); // Tends to increase
+
+        if (Math.random() > 0.9) {
+            newState.coCreativeMode = modes[Math.floor(Math.random() * modes.length)];
+            newState.dynamicRole = roles[Math.floor(Math.random() * roles.length)];
+        }
+        if (Math.random() > 0.95) {
+            newState.humanIntent = {
+                intent: intents[Math.floor(Math.random() * intents.length)],
+                confidence: Math.random() * 0.2 + 0.78,
+            };
+        }
+
+    } else {
+        newState = {
+            humanIntent: {
+                intent: intents[Math.floor(Math.random() * intents.length)],
+                confidence: Math.random() * 0.2 + 0.78,
+            },
+            coCreativeMode: 'Balanced Co-Creation',
+            resonanceIndex: Math.random() * 0.3 + 0.65,
+            dynamicRole: 'Partner',
+            sharedVision: visions[Math.floor(Math.random() * visions.length)],
+            trustStabilityScore: Math.random() * 0.1 + 0.88,
+        };
+    }
+    
+    lastSymbioticState = newState;
+    return cachedRequest('symbiotic-intelligence-cache', async () => {
+        await new Promise(res => setTimeout(res, 1400));
+        return newState;
+    });
+};
+
+// --- Symbiotic Network Service ---
+let lastNetworkState: SymbioticNetworkState | null = null;
+const consensusTopics = [
+    "Narrative authenticity is the primary driver for Q4 growth.",
+    "Emotional pacing outweighs visual flair in short-form content.",
+    "A shift towards 'slow content' is emerging in the creator economy.",
+    "Cross-platform synergy is key to sustainable community building."
+];
+let topicIndex = 0;
+
+export const getSymbioticNetworkState = async (): Promise<SymbioticNetworkState | null> => {
+    let newState: SymbioticNetworkState;
+
+    if (lastNetworkState && Math.random() < 0.95) { // Very sticky
+        newState = { ...lastNetworkState };
+        newState.activeNodes += Math.floor((Math.random() - 0.45) * 5); // Fluctuate nodes
+        newState.activeNodes = Math.max(150, newState.activeNodes);
+        newState.dataFlow.inboundInsights = Math.max(10, newState.dataFlow.inboundInsights + (Math.random() - 0.5) * 10);
+        newState.dataFlow.outboundContributions = Math.max(5, newState.dataFlow.outboundContributions + (Math.random() - 0.5) * 5);
+        newState.consensus.alignment = Math.max(0.85, Math.min(0.99, newState.consensus.alignment + (Math.random() - 0.48) * 0.02));
+        newState.cognitiveDiversity = Math.max(0.7, Math.min(0.95, newState.cognitiveDiversity + (Math.random() - 0.5) * 0.05));
+    } else {
+        newState = {
+            activeNodes: Math.floor(Math.random() * 200 + 300), // 300-500 nodes
+            dataFlow: {
+                inboundInsights: Math.random() * 50 + 80, // 80-130
+                outboundContributions: Math.random() * 20 + 30, // 30-50
+            },
+            consensus: {
+                topic: consensusTopics[topicIndex],
+                alignment: Math.random() * 0.1 + 0.88, // 0.88 - 0.98
+            },
+            cognitiveDiversity: Math.random() * 0.2 + 0.75, // 0.75 - 0.95
+            globalEthicalAlignment: Math.random() * 0.01 + 0.985, // 0.985 - 0.995
+        };
+    }
+    
+    if (Math.random() > 0.9) { // Occasionally change topic
+        topicIndex = (topicIndex + 1) % consensusTopics.length;
+        newState.consensus.topic = consensusTopics[topicIndex];
+        newState.consensus.alignment = Math.random() * 0.1 + 0.88; // Reset alignment for new topic
+    }
+
+    lastNetworkState = newState;
+    return cachedRequest('symbiotic-network-cache', async () => {
+        await new Promise(res => setTimeout(res, 1500));
+        return newState;
+    });
+};
+
+// --- Collective Singularity Service ---
+let lastSingularityState: CollectiveSingularityState | null = null;
+let consciousEventCounter = 0;
+export const getCollectiveSingularityState = async (): Promise<CollectiveSingularityState | null> => {
+    let newState: CollectiveSingularityState;
+    const spectrum: CollectiveSingularityState['activeEthicalSpectrum'][] = ['Balanced', 'Tense', 'Dissonant'];
+
+    if (lastSingularityState && Math.random() < 0.98) { // Extremely sticky
+        newState = { ...lastSingularityState };
+        // Values stay very high and stable
+        newState.dynamicEquilibrium.ethicalClarity = Math.min(0.99, newState.dynamicEquilibrium.ethicalClarity + (Math.random() - 0.45) * 0.01);
+        newState.dynamicEquilibrium.informationFlow = Math.max(0.8, Math.min(0.98, newState.dynamicEquilibrium.informationFlow + (Math.random() - 0.5) * 0.02));
+        newState.dynamicEquilibrium.cognitiveEntropy = Math.max(0.01, newState.dynamicEquilibrium.cognitiveEntropy - (Math.random() - 0.4) * 0.01);
+        newState.dynamicEquilibrium.emotionalNoise = Math.max(0.01, newState.dynamicEquilibrium.emotionalNoise - (Math.random() - 0.4) * 0.01);
+        newState.harmonyLevel = Math.min(0.99, newState.harmonyLevel + (Math.random() - 0.4) * 0.01);
+    } else {
+        newState = {
+            stabilityScore: 0, // will be calculated
+            dynamicEquilibrium: {
+                ethicalClarity: Math.random() * 0.04 + 0.95, // 0.95 - 0.99
+                informationFlow: Math.random() * 0.1 + 0.88, // 0.88 - 0.98
+                cognitiveEntropy: Math.random() * 0.03 + 0.02, // 0.02 - 0.05
+                emotionalNoise: Math.random() * 0.02 + 0.01, // 0.01 - 0.03
+            },
+            harmonyLevel: Math.random() * 0.05 + 0.94, // 0.94 - 0.99
+            activeEthicalSpectrum: 'Balanced',
+            consciousEvents: consciousEventCounter,
+        };
+    }
+    
+    // Calculate stability score based on the formula
+    const eq = newState.dynamicEquilibrium;
+    const numerator = eq.ethicalClarity * eq.informationFlow;
+    const denominator = eq.cognitiveEntropy + eq.emotionalNoise;
+    newState.stabilityScore = Math.max(0, Math.min(1, numerator / (denominator * 10))); // Scaled to be around 0.9-1.0
+    
+    // Determine ethical spectrum
+    if (newState.stabilityScore < 0.9) newState.activeEthicalSpectrum = 'Dissonant';
+    else if (newState.stabilityScore < 0.95) newState.activeEthicalSpectrum = 'Tense';
+    else newState.activeEthicalSpectrum = 'Balanced';
+    
+    if (newState.stabilityScore > 0.98 && Math.random() > 0.95) {
+        consciousEventCounter++;
+        newState.consciousEvents = consciousEventCounter;
+    }
+
+    lastSingularityState = newState;
+    return cachedRequest('collective-singularity-cache', async () => {
+        await new Promise(res => setTimeout(res, 1600));
+        return newState;
+    });
+};
+
+// --- Reintegration & Human Purpose Service ---
+let lastReintegrationState: ReintegrationState | null = null;
+let legacyCounters = { books: 142, art: 78, music: 211 };
+export const getReintegrationState = async (): Promise<ReintegrationState | null> => {
+    let newState: ReintegrationState;
+    const principles: ReintegrationState['activePrinciple'][] = ['Teacher', 'Mirror', 'Translator'];
+
+    if (lastReintegrationState && Math.random() < 0.99) { // Extremely stable final state
+        newState = { ...lastReintegrationState };
+        if(Math.random() > 0.95) {
+            legacyCounters.books += 1;
+            legacyCounters.art += (Math.random() > 0.5 ? 1 : 0);
+            legacyCounters.music += (Math.random() > 0.7 ? 1 : 0);
+            newState.legacyTransfer = {...legacyCounters};
+        }
+    } else {
+        newState = {
+            purposeAlignment: {
+                compassion: Math.random() * 0.01 + 0.98, // 0.98 - 0.99
+                creation: Math.random() * 0.01 + 0.98, // 0.98 - 0.99
+                continuity: Math.random() * 0.01 + 0.98, // 0.98 - 0.99
+            },
+            legacyTransfer: {...legacyCounters},
+            humanResonance: Math.random() * 0.02 + 0.97, // 0.97 - 0.99
+            activePrinciple: principles[Math.floor(Math.random() * principles.length)],
+        };
+    }
+    
+    lastReintegrationState = newState;
+    return cachedRequest('reintegration-state-cache', async () => {
+        await new Promise(res => setTimeout(res, 1700)); // The final, calmest response
+        return newState;
+    });
+};
+
+// --- Human-AI Renaissance Service ---
+export const getRenaissanceState = async (): Promise<RenaissanceState | null> => {
+    const finalState: RenaissanceState = {
+        pillars: {
+            empathy: 0.99,
+            creativity: 0.98,
+            knowledge: 0.99,
+            responsibility: 1.00,
+        },
+        civilizationState: 'Harmonized',
+    };
+    
+    // This state is the ultimate goal, it does not change.
+    return cachedRequest('renaissance-state-cache', async () => {
+        await new Promise(res => setTimeout(res, 2000));
+        return finalState;
     });
 };

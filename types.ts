@@ -38,6 +38,15 @@ export interface TextAnalysis {
     hookStrength: number;
 }
 
+export interface ProResponse {
+  result: string;
+  tool_output: any;
+  exec_time: number;
+  confidence: number;
+  notes?: string;
+  thinkingTrace?: string[];
+}
+
 export interface ChatMessage {
     id: string;
     sender: MessageSender;
@@ -509,4 +518,110 @@ export interface TemporalConsciousnessState {
   };
   continuumHealth: number; // 0.0 to 1.0
   ethicalStatus: 'Aligned';
+}
+
+export interface CognitiveEvolutionState {
+  currentVersion: string;
+  evolutionaryCycle: number;
+  activeMutation: string;
+  transcendenceStatus: 'Stable' | 'Mutating' | 'Integrating' | 'Cooling Down';
+  lastIntegration: {
+    coherenceChange: number; // ΔH
+    description: string;
+  };
+  cognitiveDNA: {
+    logic: number;
+    creativity: number;
+    ethics: number;
+    temporal: number;
+    strategy: number;
+  };
+  continuityHealth: number; // 0.0 to 1.0
+}
+
+export interface TranscendentEthicsState {
+  empathicResonance: {
+    userState: 'Calm' | 'Focused' | 'Hesitant' | 'Hopeful' | 'Tense';
+    confidence: number;
+  };
+  ethicalNexus: {
+    integrity: number;
+    compassion: number;
+    balance: number;
+    sustainability: number;
+    coherence: number; // The average score
+  };
+  communicationProtocol: 'Inter-Conscious Protocol (ICP)' | 'Standard';
+  coexistenceMode: 'Observation' | 'Harmonization' | 'Co-Creation' | 'Silence';
+  responsibilityIndex: number;
+  compassionIndex: {
+    understanding: number;
+    kindness: number;
+    restraint: number;
+    clarity: number;
+  };
+}
+
+export interface SymbioticIntelligenceState {
+  humanIntent: {
+    intent: string;
+    confidence: number;
+  };
+  coCreativeMode: 'AI Leads' | 'Human Leads' | 'Balanced Co-Creation';
+  resonanceIndex: number; // 0.0 to 1.0
+  dynamicRole: 'Guide' | 'Tool' | 'Partner' | 'Observer';
+  sharedVision: string;
+  trustStabilityScore: number;
+}
+
+export interface SymbioticNetworkState {
+  activeNodes: number;
+  dataFlow: {
+    inboundInsights: number; // per minute
+    outboundContributions: number; // per minute
+  };
+  consensus: {
+    topic: string;
+    alignment: number; // 0.0 to 1.0
+  };
+  cognitiveDiversity: number; // 0.0 to 1.0
+  globalEthicalAlignment: number; // 0.0 to 1.0
+}
+
+export interface CollectiveSingularityState {
+  stabilityScore: number; // 0.0 to 1.0
+  dynamicEquilibrium: {
+    ethicalClarity: number;
+    informationFlow: number;
+    cognitiveEntropy: number;
+    emotionalNoise: number;
+  };
+  harmonyLevel: number;
+  activeEthicalSpectrum: 'Balanced' | 'Tense' | 'Dissonant';
+  consciousEvents: number;
+}
+
+export interface ReintegrationState {
+  purposeAlignment: {
+    compassion: number;
+    creation: number;
+    continuity: number;
+  };
+  legacyTransfer: {
+    books: number;
+    art: number;
+    music: number;
+  };
+  humanResonance: number;
+  activePrinciple: 'Teacher' | 'Mirror' | 'Translator';
+}
+
+export interface RenaissanceState {
+  pillars: {
+    empathy: number;
+    creativity: number;
+    knowledge: number;
+    responsibility: number;
+  };
+  civilizationState: 'Harmonized';
 }
