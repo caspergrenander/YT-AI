@@ -22,7 +22,7 @@ const EvolutionStatus: React.FC<EvolutionStatusProps> = ({ ledger }) => {
 
     const currentLevelMatch = ledger.level.match(/L(\d)/);
     const currentLevelNumber = currentLevelMatch ? parseInt(currentLevelMatch[1], 10) : 1;
-    const progress = ledger.progress_to_next_level ?? 0;
+    const progress = Number(ledger.progress_to_next_level ?? 0);
     const radius = 20;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (progress / 100) * circumference;

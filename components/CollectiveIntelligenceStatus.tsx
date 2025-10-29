@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { CollectiveIntelligenceState } from '../types';
 
@@ -8,8 +9,9 @@ interface CollectiveIntelligenceStatusProps {
 
 const SRSGauge: React.FC<{ score: number }> = ({ score }) => {
     const radius = 40;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - score * circumference;
+    // FIX: Explicitly cast Math.PI and score to numbers to prevent arithmetic operation errors.
+    const circumference = 2 * Number(Math.PI) * radius;
+    const offset = circumference - Number(score) * circumference;
     
     let colorClass = 'text-purple-400';
     let label = 'Splittrad Publik';
@@ -67,8 +69,8 @@ const ClusterChart: React.FC<{ data: CollectiveIntelligenceState['activeClusters
         'Community-veterans': { icon: 'fa-solid fa-user-group', color: 'bg-green-500' },
         'Casual passers': { icon: 'fa-solid fa-street-view', color: 'bg-gray-500' },
     };
-    // FIX: Correctly sort the data by numeric value. The original code `b - a` was attempting to subtract arrays, causing a TypeError. This also fixes follow-on errors where `value` was not inferred as a number.
-    const sortedData = Object.entries(data).sort((a, b) => b[1] - a[1]);
+    // FIX: Explicitly cast sort values to numbers.
+    const sortedData = Object.entries(data).sort((a, b) => Number(b[1]) - Number(a[1]));
 
     return (
         <div className="space-y-3">
@@ -81,10 +83,12 @@ const ClusterChart: React.FC<{ data: CollectiveIntelligenceState['activeClusters
                                 <i className={`${info.icon} w-5 text-center text-gray-300`}></i>
                                 <span className="ml-2 font-medium text-gray-200">{name}</span>
                             </div>
-                            <span className="font-mono text-white">{(value * 100).toFixed(1)}%</span>
+                            {/* FIX: Explicitly cast value to a number for the arithmetic operation. */}
+                            <span className="font-mono text-white">{(Number(value) * 100).toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-gray-700/50 rounded-full h-2.5">
-                            <div className={`${info.color} h-2.5 rounded-full`} style={{ width: `${value * 100}%` }}></div>
+                            {/* FIX: Explicitly cast value to a number for calculating width. */}
+                            <div className={`${info.color} h-2.5 rounded-full`} style={{ width: `${Number(value) * 100}%` }}></div>
                         </div>
                     </div>
                 );

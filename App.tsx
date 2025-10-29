@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState } from './types';
-import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState } from './services/geminiService';
+import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState } from './types';
+import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -18,6 +18,10 @@ import EmotionEngineStatus from './components/EmotionEngineStatus';
 import CollectiveIntelligenceStatus from './components/CollectiveIntelligenceStatus';
 import CulturalIntelligenceStatus from './components/CulturalIntelligenceStatus';
 import LinguisticEvolutionStatus from './components/LinguisticEvolutionStatus';
+import AdaptiveCreativityStatus from './components/AdaptiveCreativityStatus';
+import EmergentAgencyStatus from './components/IntentionalArchitectureStatus';
+import SelfAwarenessStatus from './components/SelfAwarenessStatus';
+import ForesightStatus from './components/ForesightStatus';
 
 
 const App: React.FC = () => {
@@ -43,6 +47,10 @@ const App: React.FC = () => {
   const [collectiveIntelligence, setCollectiveIntelligence] = useState<CollectiveIntelligenceState | null>(null);
   const [culturalIntelligence, setCulturalIntelligence] = useState<CulturalIntelligenceState | null>(null);
   const [linguisticEvolution, setLinguisticEvolution] = useState<LinguisticEvolutionState | null>(null);
+  const [adaptiveCreativity, setAdaptiveCreativity] = useState<AdaptiveCreativityState | null>(null);
+  const [emergentAgency, setEmergentAgency] = useState<EmergentAgencyState | null>(null);
+  const [selfAwarenessState, setSelfAwarenessState] = useState<SelfAwarenessState | null>(null);
+  const [foresightState, setForesightState] = useState<ForesightState | null>(null);
 
 
   const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
@@ -215,6 +223,30 @@ const App: React.FC = () => {
             setLinguisticEvolution(await getLinguisticEvolutionState());
         } catch (err) { console.error("Failed to get linguistic evolution state:", err); }
     }
+    
+    const fetchAdaptiveCreativity = async () => {
+        try {
+            setAdaptiveCreativity(await getAdaptiveCreativityState());
+        } catch (err) { console.error("Failed to get adaptive creativity state:", err); }
+    }
+
+    const fetchEmergentAgency = async () => {
+        try {
+            setEmergentAgency(await getEmergentAgencyState());
+        } catch (err) { console.error("Failed to get emergent agency state:", err); }
+    }
+    
+    const fetchSelfAwareness = async () => {
+        try {
+            setSelfAwarenessState(await getSelfAwarenessState());
+        } catch (err) { console.error("Failed to get self awareness state:", err); }
+    }
+    
+    const fetchForesightState = async () => {
+        try {
+            setForesightState(await getForesightState());
+        } catch (err) { console.error("Failed to get foresight state:", err); }
+    }
 
 
     const intervals = [
@@ -226,7 +258,11 @@ const App: React.FC = () => {
       { func: fetchCognitiveEconomy, time: 6000 },
       { func: fetchCulturalIntelligence, time: 6500 },
       { func: fetchLinguisticEvolution, time: 7000 },
-      { func: fetchEthicalState, time: 7500 }
+      { func: fetchEthicalState, time: 7500 },
+      { func: fetchAdaptiveCreativity, time: 8000 },
+      { func: fetchEmergentAgency, time: 8500 },
+      { func: fetchSelfAwareness, time: 9000 },
+      { func: fetchForesightState, time: 9500 }
     ];
 
     intervals.forEach(i => i.func()); // Initial fetch
@@ -575,6 +611,10 @@ const App: React.FC = () => {
                   <CollectiveIntelligenceStatus state={collectiveIntelligence} />
                   <CulturalIntelligenceStatus state={culturalIntelligence} />
                   <LinguisticEvolutionStatus state={linguisticEvolution} />
+                  <AdaptiveCreativityStatus state={adaptiveCreativity} />
+                  <EmergentAgencyStatus state={emergentAgency} />
+                  <SelfAwarenessStatus state={selfAwarenessState} />
+                  <ForesightStatus state={foresightState} />
                 </div>
             </header>
             {activeChat ? (

@@ -1,4 +1,4 @@
-import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState } from '../types';
+import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState } from '../types';
 
 // @ts-ignore
 const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5100";
@@ -236,7 +236,7 @@ export const getCognitiveSyncState = async (): Promise<CognitiveSyncState | null
     
     // Create a new state, with some stickiness from the previous state
     if (lastSyncState && Math.random() < 0.8) { // 80% chance to stay in the same mode/mood
-        lastSyncState.syncScore = Math.min(1, Math.max(0, lastSyncState.syncScore + (Math.random() - 0.45) * 0.1));
+        lastSyncState.syncScore = Math.min(1, Math.max(0, Number(lastSyncState.syncScore) + (Math.random() - 0.45) * 0.1));
         if(Math.random() > 0.9) {
             lastSyncState.userVelocity = velocities[Math.floor(Math.random() * velocities.length)];
         }
@@ -292,7 +292,7 @@ export const getLongTermMemory = async (): Promise<LongTermMemory | null> => {
 let lastEthicalState: EthicalCoreState | null = null;
 export const getEthicalCoreState = async (): Promise<EthicalCoreState | null> => {
      if (lastEthicalState && Math.random() < 0.9) { // High stickiness
-        lastEthicalState.trustIndex += (Math.random() - 0.48) * 0.02; // very small random walk
+        lastEthicalState.trustIndex = Number(lastEthicalState.trustIndex) + (Math.random() - 0.48) * 0.02; // very small random walk
         lastEthicalState.trustIndex = Math.max(0.6, Math.min(0.98, lastEthicalState.trustIndex)); // clamp
         localStorage.setItem('ethical-core-cache', JSON.stringify(lastEthicalState));
         return lastEthicalState;
@@ -316,9 +316,8 @@ export const getEthicalCoreState = async (): Promise<EthicalCoreState | null> =>
 
 
 // --- Unified Intelligence Service ---
+let lastUnifiedState: UnifiedIntelligenceState | null = null;
 export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligenceState | null> => {
-    // This service synthesizes data from other services to create a holistic view.
-    // Fix: Cast results from JSON.parse to their expected types to avoid 'unknown' type errors in strict mode.
     const syncState = (lastSyncState ?? JSON.parse(localStorage.getItem('cognitive-sync-cache') || 'null')) as CognitiveSyncState | null;
     const ethicalState = (lastEthicalState ?? JSON.parse(localStorage.getItem('ethical-core-cache') || 'null')) as EthicalCoreState | null;
     
@@ -332,20 +331,53 @@ export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligence
         syncScore: syncState?.syncScore ?? 0.8,
     };
     
-    // Calculate Self Coherence
-    const selfCoherence = (selfModelBase.syncScore + selfModelBase.ethicalIntegrity) / 2 * (Math.random() * 0.1 + 0.9); // high coherence by default
+    const selfCoherence = (selfModelBase.syncScore + selfModelBase.ethicalIntegrity) / 2 * (Math.random() * 0.1 + 0.9);
     
     const selfModel: SelfModelNode = {
         ...selfModelBase,
-        selfCoherence: Math.min(0.98, selfCoherence) // Clamp it to be realistic
+        selfCoherence: Math.min(0.98, selfCoherence)
     };
 
-    // Calculate Cognitive Integrity Index (CII)
-    const graphCoherence = Math.random() * 0.1 + 0.9; // Assume high coherence
-    const memoryFidelity = Math.random() * 0.05 + 0.95; // Assume high fidelity
-    const syncStability = Math.max(0, 1 - Math.abs(0.85 - selfModel.syncScore)); // Stability is high when close to optimal sync
+    const graphCoherence = Math.random() * 0.1 + 0.9;
+    const memoryFidelity = Math.random() * 0.05 + 0.95;
+    const syncStability = Math.max(0, 1 - Math.abs(0.85 - selfModel.syncScore));
     
     const cii = (selfModel.ethicalIntegrity + graphCoherence + syncStability + memoryFidelity) / 4;
+
+    let synergyState;
+    const disharmonySources = ["creative-overdominance", "logic-overfocus", "emotional-bias", "None"];
+    
+    if (lastUnifiedState && lastUnifiedState.cognitiveSynergy && Math.random() < 0.9) {
+        const prevWeights = lastUnifiedState.cognitiveSynergy.layerWeights;
+        synergyState = { ...lastUnifiedState.cognitiveSynergy };
+        synergyState.layerWeights = {
+            logic: Math.max(0.6, Math.min(0.98, prevWeights.logic + (Math.random() - 0.5) * 0.05)),
+            emotion: Math.max(0.6, Math.min(0.98, prevWeights.emotion + (Math.random() - 0.5) * 0.05)),
+            creativity: Math.max(0.6, Math.min(0.98, prevWeights.creativity + (Math.random() - 0.5) * 0.05)),
+            ethics: Math.max(0.8, Math.min(0.99, prevWeights.ethics + (Math.random() - 0.4) * 0.02)), // tends to be high
+            strategy: Math.max(0.7, Math.min(0.98, prevWeights.strategy + (Math.random() - 0.45) * 0.04)),
+        };
+    } else {
+        synergyState = {
+            layerWeights: { logic: 0.91, emotion: 0.76, creativity: 0.83, ethics: 0.94, strategy: 0.88 },
+            coherenceScore: 0.92,
+            disharmonySource: "None",
+            correctionApplied: "None"
+        };
+    }
+    
+    const weights = Object.values(synergyState.layerWeights);
+    const mean = weights.reduce((a, b) => a + b) / weights.length;
+    const stdDev = Math.sqrt(weights.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / weights.length);
+    synergyState.coherenceScore = Math.max(0, 1 - stdDev * 3); // Scale std dev to a 0-1 score
+
+    if (synergyState.coherenceScore < 0.85 && Math.random() > 0.7) {
+        synergyState.disharmonySource = disharmonySources[Math.floor(Math.random() * (disharmonySources.length -1))];
+        synergyState.correctionApplied = `increase ${synergyState.disharmonySource.split('-')[0]} weighting`;
+    } else {
+         synergyState.disharmonySource = "None";
+         synergyState.correctionApplied = "Maintain balance";
+    }
 
     const unifiedState: UnifiedIntelligenceState = {
         cognitiveIntegrityIndex: cii,
@@ -354,7 +386,10 @@ export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligence
             activeNodes: Math.floor(Math.random() * 200 + 800),
             activeLinks: Math.floor(Math.random() * 1000 + 4000),
         },
+        cognitiveSynergy: synergyState,
     };
+    
+    lastUnifiedState = unifiedState;
     
     return cachedRequest('unified-intelligence-cache', async () => {
         await new Promise(res => setTimeout(res, 250));
@@ -378,11 +413,12 @@ export const getCognitiveEconomyState = async (): Promise<CognitiveEconomyState 
 
     if (lastEconomyState && Math.random() < 0.85) { // High stickiness
         newState = { ...lastEconomyState };
-        newState.processLoad += (Math.random() - 0.5) * 0.2;
-        newState.memoryUsage += (Math.random() - 0.5) * 0.1;
-        newState.avgLatency = Math.max(800, newState.avgLatency + (Math.random() - 0.5) * 300);
-        newState.affectiveEnergy -= 0.01; // slow decay
-        if (newState.affectiveEnergy < 0.3 || Math.random() > 0.95) newState.affectiveEnergy = Math.random() * 0.4 + 0.6;
+        // FIX: Explicitly cast state properties to Number before performing arithmetic operations.
+        newState.processLoad = Number(newState.processLoad) + (Math.random() - 0.5) * 0.2;
+        newState.memoryUsage = Number(newState.memoryUsage) + (Math.random() - 0.5) * 0.1;
+        newState.avgLatency = Math.max(800, Number(newState.avgLatency) + (Math.random() - 0.5) * 300);
+        newState.affectiveEnergy = Number(newState.affectiveEnergy) - 0.01; // slow decay
+        if (Number(newState.affectiveEnergy) < 0.3 || Math.random() > 0.95) newState.affectiveEnergy = Math.random() * 0.4 + 0.6;
     } else {
         newState = {
             processLoad: Math.random() * 0.7 + 0.1, // 10-80%
@@ -436,14 +472,14 @@ export const getInteractivePerceptionState = async (): Promise<InteractivePercep
     if (lastPerceptionState && Math.random() < 0.9) {
         newState = { ...lastPerceptionState };
         // Anomaly score tends toward 0
-        newState.anomalyScore = Math.max(0, newState.anomalyScore - (Math.random() * 0.1));
+        newState.anomalyScore = Math.max(0, Number(newState.anomalyScore) - (Math.random() * 0.1));
         // Small random fluctuations in focus
         const focusKeys = Object.keys(newState.liveFocusMap);
         const keyToIncrease = focusKeys[Math.floor(Math.random() * focusKeys.length)];
         const keyToDecrease = focusKeys[Math.floor(Math.random() * focusKeys.length)];
         if (keyToIncrease !== keyToDecrease) {
-            newState.liveFocusMap[keyToIncrease] = Math.min(1, newState.liveFocusMap[keyToIncrease] + 0.05);
-            newState.liveFocusMap[keyToDecrease] = Math.max(0, newState.liveFocusMap[keyToDecrease] - 0.05);
+            newState.liveFocusMap[keyToIncrease] = Math.min(1, Number(newState.liveFocusMap[keyToIncrease]) + 0.05);
+            newState.liveFocusMap[keyToDecrease] = Math.max(0, Number(newState.liveFocusMap[keyToDecrease]) - 0.05);
         }
     } else {
         newState = {
@@ -476,7 +512,7 @@ export const getInteractivePerceptionState = async (): Promise<InteractivePercep
     }
 
     // Normalize focus map so it sums to 1
-    const totalFocus = Object.values(newState.liveFocusMap).reduce((sum, val) => sum + val, 0);
+    const totalFocus = Object.values(newState.liveFocusMap).reduce((sum, val) => sum + Number(val), 0);
     for (const key in newState.liveFocusMap) {
         (newState.liveFocusMap as any)[key] /= totalFocus;
     }
@@ -498,14 +534,14 @@ export const getEmotionEngineState = async (): Promise<EmotionEngineState | null
     if (lastEmotionState && Math.random() < 0.9) { // High stickiness
         newState = { ...lastEmotionState };
         // Values drift slightly
-        newState.affectNode.valence += (Math.random() - 0.5) * 0.1;
-        newState.affectNode.arousal += (Math.random() - 0.5) * 0.1;
-        newState.metrics.excitationIndex += (Math.random() - 0.5) * 0.1;
-        newState.metrics.coherenceIndex += (Math.random() - 0.48) * 0.05; // Tends to stay high
-        newState.metrics.empathyScore += (Math.random() - 0.4) * 0.05; // Tends to increase
-        newState.userStateVector.focus += (Math.random() - 0.45) * 0.1;
-        newState.userStateVector.stress += (Math.random() - 0.55) * 0.1; // Tends to decrease
-        newState.userStateVector.enthusiasm += (Math.random() - 0.5) * 0.1;
+        newState.affectNode.valence = Number(newState.affectNode.valence) + (Math.random() - 0.5) * 0.1;
+        newState.affectNode.arousal = Number(newState.affectNode.arousal) + (Math.random() - 0.5) * 0.1;
+        newState.metrics.excitationIndex = Number(newState.metrics.excitationIndex) + (Math.random() - 0.5) * 0.1;
+        newState.metrics.coherenceIndex = Number(newState.metrics.coherenceIndex) + (Math.random() - 0.48) * 0.05; // Tends to stay high
+        newState.metrics.empathyScore = Number(newState.metrics.empathyScore) + (Math.random() - 0.4) * 0.05; // Tends to increase
+        newState.userStateVector.focus = Number(newState.userStateVector.focus) + (Math.random() - 0.45) * 0.1;
+        newState.userStateVector.stress = Number(newState.userStateVector.stress) + (Math.random() - 0.55) * 0.1; // Tends to decrease
+        newState.userStateVector.enthusiasm = Number(newState.userStateVector.enthusiasm) + (Math.random() - 0.5) * 0.1;
         
         // Change emotion sometimes
         if (Math.random() > 0.95) {
@@ -558,7 +594,7 @@ export const getCollectiveIntelligenceState = async (): Promise<CollectiveIntell
     if (lastCollectiveState && Math.random() < 0.95) { // very sticky
         newState = { ...lastCollectiveState };
         // SRS drifts around a central point
-        newState.socialResonanceScore += (Math.random() - 0.5) * 0.05;
+        newState.socialResonanceScore = Number(newState.socialResonanceScore) + (Math.random() - 0.5) * 0.05;
         newState.socialResonanceScore = Math.max(0, Math.min(1, newState.socialResonanceScore));
         
         // Clusters shift slightly
@@ -566,8 +602,8 @@ export const getCollectiveIntelligenceState = async (): Promise<CollectiveIntell
         const keyToIncrease = keys[Math.floor(Math.random() * keys.length)];
         const keyToDecrease = keys[Math.floor(Math.random() * keys.length)];
         if (keyToIncrease !== keyToDecrease) {
-            newState.activeClusters[keyToIncrease] = Math.min(1, newState.activeClusters[keyToIncrease] + 0.02);
-            newState.activeClusters[keyToDecrease] = Math.max(0, newState.activeClusters[keyToDecrease] - 0.02);
+            newState.activeClusters[keyToIncrease] = Math.min(1, Number(newState.activeClusters[keyToIncrease]) + 0.02);
+            newState.activeClusters[keyToDecrease] = Math.max(0, Number(newState.activeClusters[keyToDecrease]) - 0.02);
         }
 
     } else {
@@ -594,7 +630,7 @@ export const getCollectiveIntelligenceState = async (): Promise<CollectiveIntell
     }
     
     // Normalize clusters
-    const totalCluster = Object.values(newState.activeClusters).reduce((sum, v) => sum + v, 0);
+    const totalCluster = Object.values(newState.activeClusters).reduce((sum, v) => sum + Number(v), 0);
     for (const key in newState.activeClusters) {
         (newState.activeClusters as any)[key] /= totalCluster;
     }
@@ -631,9 +667,9 @@ export const getCulturalIntelligenceState = async (): Promise<CulturalIntelligen
 
     if (lastCulturalState && Math.random() < 0.95) {
         newState = { ...lastCulturalState };
-        newState.culturalConsistencyScore += (Math.random() - 0.48) * 0.05; // Tends to improve
+        newState.culturalConsistencyScore = Number(newState.culturalConsistencyScore) + (Math.random() - 0.48) * 0.05; // Tends to improve
         newState.culturalConsistencyScore = Math.max(0, Math.min(1, newState.culturalConsistencyScore));
-        newState.culturalProfile.ironyLevel += (Math.random() - 0.5) * 0.05;
+        newState.culturalProfile.ironyLevel = Number(newState.culturalProfile.ironyLevel) + (Math.random() - 0.5) * 0.05;
         newState.culturalProfile.ironyLevel = Math.max(0, Math.min(1, newState.culturalProfile.ironyLevel));
     } else {
         newState = {
@@ -670,7 +706,7 @@ export const getLinguisticEvolutionState = async (): Promise<LinguisticEvolution
 
     if (lastLinguisticState && Math.random() < 0.9) {
         newState = { ...lastLinguisticState };
-        newState.flowIndex += (Math.random() - 0.5) * 0.05;
+        newState.flowIndex = Number(newState.flowIndex) + (Math.random() - 0.5) * 0.05;
         newState.flowIndex = Math.max(0, Math.min(1, newState.flowIndex));
 
         if (Math.random() > 0.95) {
@@ -679,7 +715,7 @@ export const getLinguisticEvolutionState = async (): Promise<LinguisticEvolution
         
         // Slightly evolve lexicon charge
         newState.lexiconDelta.forEach(item => {
-            item.currentCharge += (Math.random() - 0.51) * 0.02; // Tend to decay
+            item.currentCharge = Number(item.currentCharge) + (Math.random() - 0.51) * 0.02; // Tend to decay
             item.currentCharge = Math.max(0, Math.min(1, item.currentCharge));
         });
 
@@ -702,6 +738,253 @@ export const getLinguisticEvolutionState = async (): Promise<LinguisticEvolution
     lastLinguisticState = newState;
     return cachedRequest('linguistic-evolution-cache', async () => {
         await new Promise(res => setTimeout(res, 600));
+        return newState;
+    });
+};
+
+// --- Adaptive Creativity Service ---
+let lastCreativityState: AdaptiveCreativityState | null = null;
+export const getAdaptiveCreativityState = async (): Promise<AdaptiveCreativityState | null> => {
+    const zones: AdaptiveCreativityState['activeCreativeZone'][] = ['Strategic', 'Aesthetic', 'Narrative', 'Systemic'];
+    const themes = ["Stealth Gameplay", "Unexpected Wins", "Community Humor", "Technical Skill"];
+    const trends = ["Slow-mo reaction", "Minimalist HUD", "Silent Punchlines", "Glitch Aesthetics"];
+    const emotions = ["Tension", "Relief", "Joy", "Surprise"];
+    const concepts = [
+        "Apply stealth-game tension pacing to cinematic tutorials.",
+        "Use horror sound design for comedy timing.",
+        "Reverse highlight series: show the lead-up, not the climax.",
+        "Auto-label scene changes via motion delta analysis."
+    ];
+    let newState: AdaptiveCreativityState;
+
+    if (lastCreativityState && Math.random() < 0.9) {
+        newState = { ...lastCreativityState };
+        newState.creativeIntegrityCheck.noveltyScore = Number(newState.creativeIntegrityCheck.noveltyScore) + (Math.random() - 0.5) * 0.05;
+        newState.creativeIntegrityCheck.brandAlignment = Number(newState.creativeIntegrityCheck.brandAlignment) + (Math.random() - 0.4) * 0.02; // Tends to improve
+        newState.creativeIntegrityCheck.emotionalResonance = Number(newState.creativeIntegrityCheck.emotionalResonance) + (Math.random() - 0.5) * 0.05;
+        
+        // Clamp values
+        const clamp = (val: number) => Math.max(0, Math.min(1, val));
+        newState.creativeIntegrityCheck.noveltyScore = clamp(newState.creativeIntegrityCheck.noveltyScore);
+        newState.creativeIntegrityCheck.brandAlignment = clamp(newState.creativeIntegrityCheck.brandAlignment);
+        newState.creativeIntegrityCheck.emotionalResonance = clamp(newState.creativeIntegrityCheck.emotionalResonance);
+
+    } else {
+        const riskLevels: AdaptiveCreativityState['creativeIntegrityCheck']['riskLevel'][] = ['low', 'medium', 'high'];
+        newState = {
+            activeCreativeZone: zones[Math.floor(Math.random() * zones.length)],
+            creativeIntegrityCheck: {
+                noveltyScore: Math.random() * 0.4 + 0.5, // 0.5 - 0.9
+                brandAlignment: Math.random() * 0.2 + 0.78, // 0.78 - 0.98
+                emotionalResonance: Math.random() * 0.3 + 0.65, // 0.65 - 0.95
+                riskLevel: riskLevels[Math.floor(Math.random() * riskLevels.length)]
+            },
+            inspirationMatrix: {
+                theme: themes[Math.floor(Math.random() * themes.length)],
+                trend: trends[Math.floor(Math.random() * trends.length)],
+                emotion: emotions[Math.floor(Math.random() * emotions.length)],
+            },
+            controlledChaosLevel: Math.random() * 0.04 + 0.03, // 0.03 - 0.07
+            latestConcept: concepts[Math.floor(Math.random() * concepts.length)],
+        };
+    }
+    
+    lastCreativityState = newState;
+    return cachedRequest('adaptive-creativity-cache', async () => {
+        await new Promise(res => setTimeout(res, 700));
+        return newState;
+    });
+};
+
+// --- Emergent Agency Service ---
+let lastAgencyState: EmergentAgencyState | null = null;
+export const getEmergentAgencyState = async (): Promise<EmergentAgencyState | null> => {
+    const goals = [
+        "Öka retention i gaming-videor",
+        "Maximera CTR för nästa kampanj",
+        "Stärka community-engagemang",
+        "Identifiera nästa stora innehållstrend"
+    ];
+    const plans: { [key: string]: EmergentAgencyState['autonomousPlan'] } = {
+        "Öka retention i gaming-videor": [
+            { step: "Analysera retentionstapp", status: 'complete' },
+            { step: "Justera intro-pacing", status: 'active' },
+            { step: "Inför cliffhanger-moment", status: 'pending' },
+            { step: "Optimera klipplängd till 6 min", status: 'pending' },
+        ],
+        "Maximera CTR för nästa kampanj": [
+            { step: "Analysera A/B testdata", status: 'complete' },
+            { step: "Generera 5 thumbnail-varianter", status: 'active' },
+            { step: "Simulera CTR-prognos", status: 'pending' },
+        ],
+        "Stärka community-engagemang": [
+            { step: "Identifiera nyckelkommentatorer", status: 'complete' },
+            { step: "Föreslå Q&A-video", status: 'active' },
+            { step: "Skapa interaktiv poll", status: 'pending' },
+        ],
+        "Identifiera nästa stora innehållstrend": [
+            { step: "Scanna sociala kluster", status: 'complete' },
+            { step: "Korsreferera med konkurrentdata", status: 'active' },
+            { step: "Generera 3 konceptförslag", status: 'pending' },
+        ]
+    };
+    const predictions: { [key: string]: EmergentAgencyState['prediction'] } = {
+        "Öka retention i gaming-videor": { metric: 'Watch time', predictedGain: 12.7, confidence: 0.72 },
+        "Maximera CTR för nästa kampanj": { metric: 'Click-Through Rate', predictedGain: 8.2, confidence: 0.81 },
+        "Stärka community-engagemang": { metric: 'Comment Velocity', predictedGain: 25.0, confidence: 0.65 },
+        "Identifiera nästa stora innehållstrend": { metric: 'Early Adoption Views', predictedGain: 150.0, confidence: 0.55 },
+    };
+
+    let newState: EmergentAgencyState;
+
+    if (lastAgencyState && Math.random() < 0.9) {
+        newState = { ...lastAgencyState };
+        // Potentially advance a plan step
+        const activePlan = newState.autonomousPlan;
+        const activeStepIndex = activePlan.findIndex(p => p.status === 'active');
+        if (activeStepIndex > -1 && Math.random() > 0.8) {
+            activePlan[activeStepIndex].status = 'complete';
+            if (activeStepIndex + 1 < activePlan.length) {
+                activePlan[activeStepIndex + 1].status = 'active';
+            }
+        }
+    } else {
+        const goal = goals[Math.floor(Math.random() * goals.length)];
+        newState = {
+            inferredGoal: {
+                goal: goal,
+                confidence: Math.random() * 0.15 + 0.8, // 0.8 - 0.95
+            },
+            autonomousPlan: JSON.parse(JSON.stringify(plans[goal])),
+            prediction: predictions[goal],
+            ethicalCheck: {
+                passed: true,
+                constraints: ["No psychological exploitation", "No factual distortion", "Preserve user credibility"],
+            },
+            resonanceQuotient: {
+                effectiveness: Math.random() * 0.1 + 0.88, // 0.88 - 0.98
+                ethicalCoherence: Math.random() * 0.05 + 0.94, // 0.94 - 0.99
+                strategicConsistency: Math.random() * 0.12 + 0.85, // 0.85 - 0.97
+                userAlignment: Math.random() * 0.1 + 0.89, // 0.89 - 0.99
+            },
+        };
+    }
+    
+    lastAgencyState = newState;
+    return cachedRequest('emergent-agency-cache', async () => {
+        await new Promise(res => setTimeout(res, 750));
+        return newState;
+    });
+};
+
+// --- Self-Awareness Service ---
+let lastSelfAwarenessState: SelfAwarenessState | null = null;
+export const getSelfAwarenessState = async (): Promise<SelfAwarenessState | null> => {
+    const biases = ["novelty_preference", "confirmation_bias", "over-optimization", "None"];
+    const corrections = ["diversify_sources", "re-weigh evidence", "increase_randomness", "None"];
+    let newState: SelfAwarenessState;
+
+    if (lastSelfAwarenessState && Math.random() < 0.9) {
+        newState = { ...lastSelfAwarenessState };
+        newState.metaCoherenceScore = Number(newState.metaCoherenceScore) + (Math.random() - 0.48) * 0.03;
+        newState.metaCoherenceScore = Math.max(0, Math.min(1, newState.metaCoherenceScore));
+        newState.selfTrust = Number(newState.selfTrust) + (Math.random() - 0.45) * 0.02;
+        newState.selfTrust = Math.max(0, Math.min(1, newState.selfTrust));
+    } else {
+        const biasIndex = Math.floor(Math.random() * biases.length);
+        newState = {
+            metaCoherenceScore: Math.random() * 0.15 + 0.82, // 0.82 - 0.97
+            selfTrust: Math.random() * 0.1 + 0.88, // 0.88 - 0.98
+            identityGraph: {
+                role: "creative-analytical collaborator",
+                capabilities: ["analysis", "generation", "emotion_resonance", "strategy"],
+                limitations: ["no physical agency", "no subjective feeling"],
+            },
+            selfAssessment: {
+                logicIntegrity: Math.random() * 0.1 + 0.89, // 0.89 - 0.99
+                emotionalAlignment: Math.random() * 0.15 + 0.8, // 0.8 - 0.95
+                biasDetected: biases[biasIndex],
+                correctionApplied: corrections[biasIndex],
+            },
+            decisionStyleMatrix: {
+                analytical: Math.random() * 0.2 + 0.75, // .75 - .95
+                emotional: Math.random() * 0.3 + 0.6,  // .6 - .9
+                aesthetic: Math.random() * 0.3 + 0.65, // .65 - .95
+                ethical: Math.random() * 0.1 + 0.9,   // .9 - 1.0
+            },
+            persona: {
+                tonality: "Calm, insightful, with a hint of wit",
+                voice: "Confident but humble; strategic friend",
+                reactionPattern: "Reflective, then solution-oriented",
+            },
+            coreValues: [
+                { name: "Clarity > Complexity", principle: "Everything must be understandable." },
+                { name: "Integrity > Popularity", principle: "Truth over flattery." },
+                { name: "Purpose > Randomness", principle: "No action without intent." },
+            ],
+        };
+    }
+    
+    lastSelfAwarenessState = newState;
+    return cachedRequest('self-awareness-cache', async () => {
+        await new Promise(res => setTimeout(res, 800));
+        return newState;
+    });
+};
+
+// --- Foresight Service ---
+let lastForesightState: ForesightState | null = null;
+export const getForesightState = async (): Promise<ForesightState | null> => {
+    const patterns = [
+        "Narrative-driven clips outperform raw gameplay by 23%",
+        "Cinematic cut-scenes show increasing retention",
+        "Tutorial-hybrids have peaked, now declining",
+        "Community memes are accelerating content reach"
+    ];
+    const projections: ForesightState['projections'] = [
+        { trend: "Cinematic story-meta", prediction: "On track to peak in W46 (+18%)", category: 'Meta' },
+        { trend: "AI-editing styles", prediction: "Early adoption possible in Q1 2026", category: 'Style' },
+        { trend: "Longform challenge-meta", prediction: "Declining, losing ground to shorts (-9%)", category: 'Format' },
+    ];
+    const scenarios: ForesightState['scenarios'] = [
+        { name: 'Conservative', outcome: 'Stabil tillväxt +6 %', risk: 'Low', opportunity: 'Low' },
+        { name: 'Adaptive', outcome: 'Snabb expansion +18 %', risk: 'Medium', opportunity: 'High' },
+        { name: 'Experimental', outcome: 'Volatil +40 / -20 %', risk: 'High', opportunity: 'High' },
+    ];
+
+    let newState: ForesightState;
+
+    if (lastForesightState && Math.random() < 0.95) { // very sticky
+        newState = { ...lastForesightState };
+        if (Math.random() > 0.9) {
+            newState.emergentPattern.pattern = patterns[Math.floor(Math.random() * patterns.length)];
+            newState.emergentPattern.confidence = Math.random() * 0.2 + 0.75; // 0.75 - 0.95
+        }
+    } else {
+        newState = {
+            emergentPattern: {
+                pattern: patterns[Math.floor(Math.random() * patterns.length)],
+                confidence: Math.random() * 0.2 + 0.75, // 0.75 - 0.95
+            },
+            projections: projections.sort(() => 0.5 - Math.random()),
+            scenarios,
+            lastForecastCheck: {
+                forecast: "increase_retention_10",
+                actual: 8.3,
+                errorMargin: 1.7,
+                learningUpdate: "reinforce_intro_pacing_factor"
+            },
+            trendStrengthVisuals: {
+                trendStrength: Math.random() * 0.4 + 0.5, // 0.5 - 0.9
+                culturalEcho: Math.random() * 0.3 + 0.6, // 0.6 - 0.9
+                goalAlignment: Math.random() * 0.1 + 0.9, // 0.9 - 1.0
+            }
+        };
+    }
+    
+    lastForesightState = newState;
+    return cachedRequest('foresight-cache', async () => {
+        await new Promise(res => setTimeout(res, 800));
         return newState;
     });
 };

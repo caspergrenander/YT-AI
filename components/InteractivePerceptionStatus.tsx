@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { InteractivePerceptionState } from '../types';
 
@@ -15,18 +16,19 @@ const modeInfo: { [key in InteractivePerceptionState['systemMode']]: { icon: str
 const FocusDonutChart: React.FC<{ data: { [key: string]: number } }> = ({ data }) => {
     const colors = ['#22d3ee', '#a855f7', '#f59e0b', '#ec4899', '#a3a3a3'];
     const radius = 60;
-    const circumference = 2 * Math.PI * radius;
+    // FIX: Explicitly cast Math.PI to a number to resolve potential type inference issues.
+    const circumference = 2 * Number(Math.PI) * radius;
     let accumulatedOffset = 0;
 
-    // FIX: Correctly sort the data by numeric value. The original code `b - a` was attempting to subtract arrays, causing a TypeError. This also fixes follow-on errors where `value` was not inferred as a number.
-    const sortedData = Object.entries(data).sort((a, b) => b[1] - a[1]);
+    const sortedData = Object.entries(data).sort((a, b) => Number(b[1]) - Number(a[1]));
 
     return (
         <div className="flex items-center space-x-6">
             <svg width="180" height="180" viewBox="0 0 140 140" className="-rotate-90">
                 {sortedData.map(([key, value], index) => {
                     const dashoffset = accumulatedOffset;
-                    const dasharray = value * circumference;
+                    // FIX: Explicitly cast value to a number to prevent arithmetic operation errors.
+                    const dasharray = Number(value) * circumference;
                     accumulatedOffset += dasharray;
 
                     return (
@@ -52,7 +54,8 @@ const FocusDonutChart: React.FC<{ data: { [key: string]: number } }> = ({ data }
                     <div key={key} className="flex items-center text-sm">
                         <div className="w-3 h-3 rounded-sm mr-2" style={{ backgroundColor: colors[index % colors.length] }}></div>
                         <span className="text-gray-300 w-32">{key}</span>
-                        <span className="font-mono font-semibold text-white">{(value * 100).toFixed(1)}%</span>
+                        {/* FIX: Explicitly cast value to a number for the arithmetic operation. */}
+                        <span className="font-mono font-semibold text-white">{(Number(value) * 100).toFixed(1)}%</span>
                     </div>
                 ))}
             </div>
@@ -78,7 +81,8 @@ const AnomalyGauge: React.FC<{ score: number }> = ({ score }) => {
                 <span className="font-mono font-bold text-white">{score.toFixed(2)}</span>
             </div>
             <div className="w-full bg-gray-700/50 rounded-full h-3">
-                <div className={`${color} h-3 rounded-full transition-all duration-300`} style={{ width: `${score * 100}%` }}></div>
+                {/* FIX: Explicitly cast score to a number for calculating width. */}
+                <div className={`${color} h-3 rounded-full transition-all duration-300`} style={{ width: `${Number(score) * 100}%` }}></div>
             </div>
             <p className="text-right text-xs font-semibold text-gray-300 mt-1">{label}</p>
         </div>

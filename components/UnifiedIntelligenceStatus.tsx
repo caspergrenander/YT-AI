@@ -1,7 +1,7 @@
 
+
 import React, { useState } from 'react';
-// Fix: Import `SelfModelNode` for type casting.
-import { UnifiedIntelligenceState, SelfModelNode } from '../types';
+import { UnifiedIntelligenceState, SelfModelNode, CognitiveSynergyState } from '../types';
 
 interface UnifiedIntelligenceStatusProps {
     state: UnifiedIntelligenceState | null;
@@ -14,6 +14,14 @@ const selfModelInfo: { [key in keyof Required<UnifiedIntelligenceState['selfMode
     ethicalIntegrity: { icon: 'fa-solid fa-gavel', label: 'Ethical Integrity' },
     syncScore: { icon: 'fa-solid fa-circle-nodes', label: 'Sync Score' },
     selfCoherence: { icon: 'fa-solid fa-infinity', label: 'Self-Coherence' },
+};
+
+const layerInfo: { [key in keyof CognitiveSynergyState['layerWeights']]: { icon: string; color: string; } } = {
+    logic: { icon: 'fa-solid fa-calculator', color: 'text-cyan-400' },
+    emotion: { icon: 'fa-solid fa-heart-pulse', color: 'text-rose-400' },
+    creativity: { icon: 'fa-solid fa-wand-magic-sparkles', color: 'text-amber-400' },
+    ethics: { icon: 'fa-solid fa-shield-halved', color: 'text-green-400' },
+    strategy: { icon: 'fa-solid fa-chess', color: 'text-purple-400' },
 };
 
 
@@ -71,41 +79,47 @@ const CIIGauge: React.FC<{ score: number }> = ({ score }) => {
     );
 };
 
-const LoopOfAwareness: React.FC = () => {
-    const steps = ["Perception", "Understanding", "Intention", "Evaluation", "Reflection", "Memory Update"];
+const CognitiveSynergyGraph: React.FC<{ synergy: CognitiveSynergyState }> = ({ synergy }) => {
     return (
-        <div className="w-full">
-            <style>
-                {`
-                @keyframes flow-gradient {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-                .flow-animation {
-                    background: linear-gradient(90deg, #1f2937, #67e8f9, #1f2937);
-                    background-size: 200% 200%;
-                    animation: flow-gradient 3s ease infinite;
-                }
-                `}
-            </style>
-            <div className="flex items-center justify-between space-x-2">
-                {steps.map((step, index) => (
-                    <React.Fragment key={step}>
-                        <div className="flex flex-col items-center text-center">
-                            <div className="w-12 h-12 rounded-full bg-gray-800 border border-purple-500/50 flex items-center justify-center">
-                                <span className="text-xs font-semibold text-purple-200">{step.split(' ')[0]}</span>
-                            </div>
+        <div className="relative w-full h-80 flex items-center justify-center">
+            {Object.entries(synergy.layerWeights).map(([key, value], index, arr) => {
+                // FIX: Explicitly cast Math.PI to a number to resolve potential type inference issues.
+                const angle = (index / arr.length) * 2 * Number(Math.PI);
+                const distance = 100;
+                // FIX: Explicitly cast Math.PI to a number to resolve potential type inference issues.
+                const x = 50 + distance * Math.cos(angle - Number(Math.PI) / 2);
+                const y = 50 + distance * Math.sin(angle - Number(Math.PI) / 2);
+                const info = layerInfo[key as keyof typeof layerInfo];
+                
+                return (
+                    <React.Fragment key={key}>
+                        <div
+                            className="absolute w-2 h-2 bg-purple-500 rounded-full"
+                            style={{ 
+                                left: `calc(${x}% - 4px)`, 
+                                top: `calc(${y}% - 4px)`,
+                                // FIX: Explicitly cast value to a number to prevent arithmetic operation errors.
+                                transform: `scale(${1 + Number(value) * 2})`,
+                                opacity: 0.5 + Number(value) * 0.5,
+                                transition: 'all 0.5s ease-out'
+                            }}
+                        />
+                        <div className="absolute flex flex-col items-center text-center" style={{ left: `calc(${x}% - 30px)`, top: `calc(${y}% - 30px)`, width: '60px' }}>
+                            <i className={`${info.icon} ${info.color} text-2xl`}></i>
+                            <span className="text-xs font-semibold text-white capitalize mt-1">{key}</span>
+                            <span className="text-xs font-mono text-gray-400">{(Number(value) * 100).toFixed(0)}</span>
                         </div>
-                        {index < steps.length - 1 && (
-                            <div className="flex-1 h-0.5 rounded-full flow-animation" style={{ animationDelay: `${index * 0.5}s` }}></div>
-                        )}
                     </React.Fragment>
-                ))}
+                );
+            })}
+            <div className="absolute w-32 h-32 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center border-2 border-cyan-500/50 shadow-[0_0_20px_rgba(34,211,238,0.4)]">
+                 <span className="text-3xl font-bold font-mono text-shimmer">{(synergy.coherenceScore * 100).toFixed(0)}</span>
+                 <span className="text-xs text-cyan-300 -mt-1">Coherence</span>
             </div>
         </div>
     );
 };
+
 
 const UnifiedIntelligenceStatus: React.FC<UnifiedIntelligenceStatusProps> = ({ state }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,7 +128,7 @@ const UnifiedIntelligenceStatus: React.FC<UnifiedIntelligenceStatusProps> = ({ s
         return null;
     }
     
-    const { cognitiveIntegrityIndex: cii, selfModel } = state;
+    const { cognitiveIntegrityIndex: cii, selfModel, cognitiveSynergy } = state;
     
     const getCIIStatusColor = (score: number) => {
         if (score < 0.8) return 'bg-red-500';
@@ -124,51 +138,60 @@ const UnifiedIntelligenceStatus: React.FC<UnifiedIntelligenceStatusProps> = ({ s
 
     const renderModal = () => (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center" onClick={() => setIsModalOpen(false)}>
-            <div className="bg-gray-900 border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-900/50 w-full max-w-4xl p-6 transform scale-100 transition-transform duration-300 animate-slide-in-fade" onClick={e => e.stopPropagation()}>
+            <div className="bg-gray-900 border border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-900/50 w-full max-w-5xl p-6 transform scale-100 transition-transform duration-300 animate-slide-in-fade" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-shimmer flex items-center" style={{ fontFamily: 'var(--font-heading)' }}>
                         <i className="fa-solid fa-diagram-project mr-3"></i>
-                        Unified Intelligence & Cognitive Cohesion
+                        Unified Intelligence & Cognitive Synergy
                     </h2>
                     <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white"><i className="fa-solid fa-times text-xl"></i></button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="flex flex-col items-center justify-center bg-gray-950/50 p-6 rounded-lg border border-white/10">
-                        <CIIGauge score={cii} />
-                        <p className="text-center text-xs text-gray-400 mt-2 max-w-xs">Cognitive Integrity Index (CII) mäter systemets holistiska hälsa och koherens.</p>
+                    <div className="flex flex-col items-center justify-start bg-gray-950/50 p-6 rounded-lg border border-white/10 space-y-6">
+                        <div>
+                            <CIIGauge score={cii} />
+                            <p className="text-center text-xs text-gray-400 mt-2 max-w-xs">Cognitive Integrity Index (CII) measures the system's holistic health.</p>
+                        </div>
+                        <div className="w-full bg-black/20 p-4 rounded-md">
+                            <h3 className="font-semibold text-cyan-300 mb-3 text-lg text-center">Self-Model Node: <span className="font-mono text-purple-300">Self@CasperGPT</span></h3>
+                            <div className="grid grid-cols-3 gap-3 text-center">
+                                {(Object.entries(selfModel) as [keyof SelfModelNode, any][]).map(([key, value]) => {
+                                    const info = selfModelInfo[key];
+                                    if (!info) return null;
+                                    return (
+                                        <div key={key} className="bg-gray-900/50 p-2 rounded-md">
+                                            <i className={`${info.icon} text-lg text-purple-400`}></i>
+                                            <p className="text-md font-bold font-mono text-white mt-1">
+                                                {typeof value === 'number' ? (value*100).toFixed(0) : value}
+                                            </p>
+                                            <p className="text-[10px] text-gray-400 leading-tight">{info.label}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                      <div className="bg-gray-950/50 p-6 rounded-lg border border-white/10 space-y-4">
-                        <h3 className="font-semibold text-cyan-300 text-lg text-center">Self-Image (Identity Core)</h3>
-                        <div className="bg-black/20 p-3 rounded-md text-sm space-y-2">
-                           <p><b className="text-purple-300 w-24 inline-block">Role:</b> YouTube Tactical Analyst</p>
-                           <p><b className="text-purple-300 w-24 inline-block">Domain:</b> Gaming Highlights</p>
-                           <p><b className="text-purple-300 w-24 inline-block">Goal:</b> Maximize retention & narrative clarity</p>
+                        <h3 className="font-semibold text-cyan-300 text-lg text-center">Cognitive Synergy</h3>
+                        <CognitiveSynergyGraph synergy={cognitiveSynergy} />
+                        <div className="bg-black/20 p-3 rounded-md">
+                           <h4 className="font-semibold text-cyan-300 text-md text-center mb-2">Meta-Harmonic Feedback</h4>
+                           <div className="grid grid-cols-3 gap-3 text-center text-sm">
+                               <div>
+                                   <p className="font-bold text-white">{(cognitiveSynergy.coherenceScore * 100).toFixed(1)}%</p>
+                                   <p className="text-xs text-gray-400">Coherence Score</p>
+                               </div>
+                               <div>
+                                   <p className={`font-semibold truncate ${cognitiveSynergy.disharmonySource === 'None' ? 'text-green-400' : 'text-yellow-400'}`} title={cognitiveSynergy.disharmonySource}>{cognitiveSynergy.disharmonySource}</p>
+                                   <p className="text-xs text-gray-400">Disharmony Source</p>
+                               </div>
+                               <div>
+                                   <p className="font-semibold text-cyan-300 truncate" title={cognitiveSynergy.correctionApplied}>{cognitiveSynergy.correctionApplied}</p>
+                                   <p className="text-xs text-gray-400">Correction Applied</p>
+                               </div>
+                           </div>
                         </div>
-                         <h3 className="font-semibold text-cyan-300 text-lg text-center pt-4">Loop of Awareness</h3>
-                        <LoopOfAwareness />
-                    </div>
-                </div>
-
-                <div className="bg-gray-950/50 p-4 rounded-lg border border-white/10 mt-6">
-                    <h3 className="font-semibold text-cyan-300 mb-3 text-lg">Self-Model Node: <span className="font-mono text-purple-300">Self@CasperGPT</span></h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-                        {/* Fix: Iterate using Object.entries for type safety and to resolve the 'symbol' index error. */}
-                        {(Object.entries(selfModel)).map(([key, value]) => {
-                             const info = selfModelInfo[key as keyof SelfModelNode];
-                             if (!info) {
-                                return null;
-                             }
-                             return (
-                                <div key={key} className="bg-black/20 p-3 rounded-md">
-                                    <i className={`${info.icon} text-2xl text-purple-400`}></i>
-                                    <p className="text-xl font-bold font-mono text-white mt-1">
-                                        {typeof value === 'number' ? (value*100).toFixed(0) : value}
-                                    </p>
-                                    <p className="text-xs text-gray-400">{info.label}</p>
-                                </div>
-                             );
-                        })}
                     </div>
                 </div>
             </div>

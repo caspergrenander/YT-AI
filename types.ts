@@ -187,6 +187,19 @@ export interface SelfModelNode {
     selfCoherence: number;
 }
 
+export interface CognitiveSynergyState {
+    layerWeights: {
+        logic: number;
+        emotion: number;
+        creativity: number;
+        ethics: number;
+        strategy: number;
+    };
+    coherenceScore: number;
+    disharmonySource: string;
+    correctionApplied: string;
+}
+
 export interface UnifiedIntelligenceState {
     cognitiveIntegrityIndex: number;
     selfModel: SelfModelNode;
@@ -194,6 +207,7 @@ export interface UnifiedIntelligenceState {
         activeNodes: number;
         activeLinks: number;
     };
+    cognitiveSynergy: CognitiveSynergyState;
 }
 
 export interface CognitiveEconomyState {
@@ -282,4 +296,107 @@ export interface LinguisticEvolutionState {
         word: string;
         decayRate: number;
     }[];
+}
+
+export interface AdaptiveCreativityState {
+  activeCreativeZone: 'Strategic' | 'Aesthetic' | 'Narrative' | 'Systemic';
+  creativeIntegrityCheck: {
+    noveltyScore: number;
+    brandAlignment: number;
+    emotionalResonance: number;
+    riskLevel: 'low' | 'medium' | 'high';
+  };
+  inspirationMatrix: {
+    theme: string;
+    trend: string;
+    emotion: string;
+  };
+  controlledChaosLevel: number;
+  latestConcept: string;
+}
+
+export interface EmergentAgencyState {
+  inferredGoal: {
+    goal: string;
+    confidence: number;
+  };
+  autonomousPlan: {
+      step: string;
+      status: 'complete' | 'active' | 'pending';
+  }[];
+  prediction: {
+    metric: string;
+    predictedGain: number; // as percentage
+    confidence: number;
+  };
+  ethicalCheck: {
+    passed: boolean;
+    constraints: string[];
+  };
+  resonanceQuotient: {
+    effectiveness: number;
+    ethicalCoherence: number;
+    strategicConsistency: number;
+    userAlignment: number;
+  };
+}
+
+export interface SelfAwarenessState {
+  metaCoherenceScore: number;
+  selfTrust: number;
+  identityGraph: {
+    role: string;
+    capabilities: string[];
+    limitations: string[];
+  };
+  selfAssessment: {
+    logicIntegrity: number;
+    emotionalAlignment: number;
+    biasDetected: string;
+    correctionApplied: string;
+  };
+  decisionStyleMatrix: {
+      analytical: number;
+      emotional: number;
+      aesthetic: number;
+      ethical: number;
+  };
+  persona: {
+      tonality: string;
+      voice: string;
+      reactionPattern: string;
+  };
+  coreValues: {
+      name: string;
+      principle: string;
+  }[];
+}
+
+export interface ForesightState {
+  emergentPattern: {
+    pattern: string;
+    confidence: number;
+  };
+  projections: {
+    trend: string;
+    prediction: string;
+    category: 'Meta' | 'Style' | 'Format';
+  }[];
+  scenarios: {
+    name: 'Conservative' | 'Adaptive' | 'Experimental';
+    outcome: string;
+    risk: 'Low' | 'Medium' | 'High';
+    opportunity: 'Low' | 'High';
+  }[];
+  lastForecastCheck: {
+    forecast: string;
+    actual: number;
+    errorMargin: number;
+    learningUpdate: string;
+  };
+  trendStrengthVisuals: {
+    trendStrength: number; // 0-1
+    culturalEcho: number; // 0-1
+    goalAlignment: number; // 0-1
+  };
 }
