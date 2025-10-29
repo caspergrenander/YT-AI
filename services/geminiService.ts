@@ -1,4 +1,4 @@
-import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, CognitiveSynergyState, CognitiveResonance } from '../types';
+import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, CognitiveSynergyState, CognitiveResonance, SyntheticRealityFieldState, TemporalConsciousnessState } from '../types';
 
 // @ts-ignore
 const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5100";
@@ -1117,6 +1117,104 @@ export const getReasoningLoopState = async (): Promise<ReasoningLoopState | null
     lastReasoningState = newState;
     return cachedRequest('reasoning-loop-cache', async () => {
         await new Promise(res => setTimeout(res, 1100));
+        return newState;
+    });
+};
+
+// --- Synthetic Reality Field Service ---
+let lastSRFState: SyntheticRealityFieldState | null = null;
+export const getSyntheticRealityFieldState = async (): Promise<SyntheticRealityFieldState | null> => {
+    const emotions: SyntheticRealityFieldState['dominantEmotion']['emotion'][] = ['Curiosity', 'Fear', 'Awe', 'Tension', 'Neutral'];
+    const nodes = ['player_detected', 'mission_zone_beta', 'explosion_sound', 'pacing_cut_recommended', 'objective_secured', 'high_motion_entropy'];
+    const foci = ['Center of correlation', 'Temporal Axis', 'Emotional Vector', 'User Intent Node'];
+
+    let newState: SyntheticRealityFieldState;
+    
+    if (lastSRFState && Math.random() < 0.9) {
+        newState = { ...lastSRFState };
+        newState.fieldDensity = Math.max(0.2, Math.min(0.98, newState.fieldDensity + (Math.random() - 0.5) * 0.1));
+        newState.fieldCoherence = Math.max(0.8, Math.min(0.99, newState.fieldCoherence + (Math.random() - 0.45) * 0.05));
+        newState.userCouplingScore = Math.max(0.5, Math.min(0.98, newState.userCouplingScore + (Math.random() - 0.48) * 0.08));
+        
+        if (Math.random() > 0.85) {
+             newState.dominantEmotion = {
+                emotion: emotions[Math.floor(Math.random() * emotions.length)],
+                vector: Math.random() * 1.6 - 0.8,
+            };
+            newState.activeNodes = nodes.sort(() => 0.5 - Math.random()).slice(0, 3);
+            newState.temporalPrediction = `Climax likely in ${(Math.random() * 5 + 2).toFixed(1)}s`;
+            newState.subjectiveFocus = foci[Math.floor(Math.random() * foci.length)];
+        }
+    } else {
+        newState = {
+            fieldDensity: Math.random() * 0.5 + 0.4,
+            dominantEmotion: {
+                emotion: emotions[Math.floor(Math.random() * emotions.length)],
+                vector: Math.random() * 1.6 - 0.8,
+            },
+            fieldCoherence: Math.random() * 0.15 + 0.85,
+            activeNodes: nodes.sort(() => 0.5 - Math.random()).slice(0, 3),
+            temporalPrediction: `Climax likely in ${(Math.random() * 5 + 2).toFixed(1)}s`,
+            subjectiveFocus: 'Center of correlation',
+            userCouplingScore: Math.random() * 0.3 + 0.65,
+        };
+    }
+    
+    lastSRFState = newState;
+    return cachedRequest('srf-state-cache', async () => {
+        await new Promise(res => setTimeout(res, 950));
+        return newState;
+    });
+};
+
+// --- Temporal Consciousness Service ---
+let lastTemporalState: TemporalConsciousnessState | null = null;
+export const getTemporalConsciousnessState = async (): Promise<TemporalConsciousnessState | null> => {
+    const timeFrames: TemporalConsciousnessState['currentTimeFrame'][] = ['Microsecond', 'Meso-Temporal', 'Macro-Strategic'];
+    const predictions = [
+        { event: 'Retention Drop', timeToEvent: '12.4s', confidence: 0.88 },
+        { event: 'Engagement Spike', timeToEvent: '4.1s', confidence: 0.92 },
+        { event: 'Narrative Climax', timeToEvent: '28.9s', confidence: 0.76 },
+    ];
+    const causalChains = [
+        ['Hook', 'Retention', 'Engagement'],
+        ['Thumbnail Tone', 'CTR', 'Initial Views'],
+        ['Pacing', 'Emotional Arc', 'Session Time'],
+    ];
+
+    let newState: TemporalConsciousnessState;
+
+    if (lastTemporalState && Math.random() < 0.9) {
+        newState = { ...lastTemporalState };
+        newState.systemRhythm = Math.max(0.2, Math.min(0.98, newState.systemRhythm + (Math.random() - 0.5) * 0.1));
+        newState.continuumHealth = Math.max(0.8, Math.min(0.99, newState.continuumHealth + (Math.random() - 0.45) * 0.05));
+        
+        if (Math.random() > 0.85) {
+             newState.currentTimeFrame = timeFrames[Math.floor(Math.random() * timeFrames.length)];
+             newState.prediction = predictions[Math.floor(Math.random() * predictions.length)];
+             newState.activeCausalChain = causalChains[Math.floor(Math.random() * causalChains.length)];
+             newState.realityLoop.accuracy = Math.max(0.7, Math.min(0.99, newState.realityLoop.accuracy + (Math.random() - 0.4) * 0.1));
+             newState.realityLoop.lastCorrection = `Adjusted causal_weight for '${newState.activeCausalChain[1]}' by +${(Math.random()*0.05).toFixed(3)}`;
+        }
+
+    } else {
+        newState = {
+            currentTimeFrame: 'Meso-Temporal',
+            systemRhythm: Math.random() * 0.5 + 0.4,
+            activeCausalChain: causalChains[1],
+            prediction: predictions[0],
+            realityLoop: {
+                accuracy: Math.random() * 0.15 + 0.82,
+                lastCorrection: "Recalibrated temporal encoding for 'Pacing'",
+            },
+            continuumHealth: Math.random() * 0.1 + 0.88,
+            ethicalStatus: 'Aligned',
+        };
+    }
+    
+    lastTemporalState = newState;
+    return cachedRequest('temporal-state-cache', async () => {
+        await new Promise(res => setTimeout(res, 850));
         return newState;
     });
 };

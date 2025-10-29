@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState } from './types';
-import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState, getCausalityState, getReasoningLoopState } from './services/geminiService';
+import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, SyntheticRealityFieldState, TemporalConsciousnessState } from './types';
+import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState, getCausalityState, getReasoningLoopState, getSyntheticRealityFieldState, getTemporalConsciousnessState } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -14,16 +14,18 @@ import MemoryStatus from './components/MemoryStatus';
 import UnifiedIntelligenceStatus from './components/UnifiedIntelligenceStatus';
 import CognitiveEconomyStatus from './components/CognitiveEconomyStatus';
 import InteractivePerceptionStatus from './components/InteractivePerceptionStatus';
+import SyntheticRealityFieldStatus from './components/SyntheticRealityFieldStatus';
 import EmotionEngineStatus from './components/EmotionEngineStatus';
 import CollectiveIntelligenceStatus from './components/CollectiveIntelligenceStatus';
 import CulturalIntelligenceStatus from './components/CulturalIntelligenceStatus';
 import LinguisticEvolutionStatus from './components/LinguisticEvolutionStatus';
 import AdaptiveCreativityStatus from './components/AdaptiveCreativityStatus';
-import EmergentAgencyStatus from './components/IntentionalArchitectureStatus';
+import EmergentAgencyStatus from './components/EmergentAgencyStatus';
 import SelfAwarenessStatus from './components/SelfAwarenessStatus';
 import ForesightStatus from './components/ForesightStatus';
 import CausalityStatus from './components/CausalityStatus';
 import ReasoningLoopStatus from './components/ReasoningLoopStatus';
+import TemporalConsciousnessStatus from './components/TemporalConsciousnessStatus';
 
 
 const App: React.FC = () => {
@@ -55,6 +57,8 @@ const App: React.FC = () => {
   const [foresightState, setForesightState] = useState<ForesightState | null>(null);
   const [causalityState, setCausalityState] = useState<CausalityState | null>(null);
   const [reasoningLoopState, setReasoningLoopState] = useState<ReasoningLoopState | null>(null);
+  const [srfState, setSrfState] = useState<SyntheticRealityFieldState | null>(null);
+  const [temporalState, setTemporalState] = useState<TemporalConsciousnessState | null>(null);
 
 
   const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
@@ -263,10 +267,24 @@ const App: React.FC = () => {
             setReasoningLoopState(await getReasoningLoopState());
         } catch (err) { console.error("Failed to get reasoning loop state:", err); }
     }
+    
+    const fetchSrfState = async () => {
+        try {
+            setSrfState(await getSyntheticRealityFieldState());
+        } catch (err) { console.error("Failed to get SRF state:", err); }
+    }
+
+    const fetchTemporalState = async () => {
+        try {
+            setTemporalState(await getTemporalConsciousnessState());
+        } catch (err) { console.error("Failed to get Temporal Consciousness state:", err); }
+    }
 
 
     const intervals = [
+      { func: fetchSrfState, time: 2500 },
       { func: fetchInteractivePerception, time: 3000 },
+      { func: fetchTemporalState, time: 3500 },
       { func: fetchUnifiedState, time: 4000 },
       { func: fetchEmotionEngine, time: 4500 },
       { func: fetchSyncState, time: 5000 },
@@ -616,6 +634,8 @@ const App: React.FC = () => {
                   GPT-5 Core Interface
                 </h1>
                 <div className="flex items-center space-x-2 md:space-x-4">
+                  <TemporalConsciousnessStatus state={temporalState} />
+                  <SyntheticRealityFieldStatus state={srfState} />
                   <InteractivePerceptionStatus state={interactivePerception} />
                   <UnifiedIntelligenceStatus state={unifiedState} />
                   <EmotionEngineStatus state={emotionEngineState} />

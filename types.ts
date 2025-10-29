@@ -480,3 +480,33 @@ export interface ReasoningLoopState {
   lastCalibration: SelfCalibration;
   activeCycle: number;
 }
+
+export interface SyntheticRealityFieldState {
+  fieldDensity: number; // e.g., 0.0 to 1.0
+  dominantEmotion: {
+    emotion: 'Curiosity' | 'Fear' | 'Awe' | 'Tension' | 'Neutral';
+    vector: number; // e.g., +0.7
+  };
+  fieldCoherence: number; // 0.0 to 1.0
+  activeNodes: string[];
+  temporalPrediction: string;
+  subjectiveFocus: string;
+  userCouplingScore: number; // 0.0 to 1.0
+}
+
+export interface TemporalConsciousnessState {
+  currentTimeFrame: 'Microsecond' | 'Meso-Temporal' | 'Macro-Strategic';
+  systemRhythm: number; // 0.0 to 1.0
+  activeCausalChain: string[];
+  prediction: {
+    event: string;
+    timeToEvent: string;
+    confidence: number;
+  };
+  realityLoop: {
+    accuracy: number;
+    lastCorrection: string;
+  };
+  continuumHealth: number; // 0.0 to 1.0
+  ethicalStatus: 'Aligned';
+}
