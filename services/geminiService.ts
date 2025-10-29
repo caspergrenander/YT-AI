@@ -1,4 +1,4 @@
-import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState } from '../types';
+import { ChatMessage, KnowledgeBase, VisionAnalysis, AudioAnalysis, TextAnalysis, Agent, CognitiveSyncState, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, SelfModelNode, CognitiveEconomyState, AITool, InteractivePerceptionState, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState, CognitiveSynergyState, CognitiveResonance } from '../types';
 
 // @ts-ignore
 const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5100";
@@ -344,18 +344,18 @@ export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligence
     
     const cii = (selfModel.ethicalIntegrity + graphCoherence + syncStability + memoryFidelity) / 4;
 
-    let synergyState;
+    let synergyState: CognitiveSynergyState;
     const disharmonySources = ["creative-overdominance", "logic-overfocus", "emotional-bias", "None"];
     
     if (lastUnifiedState && lastUnifiedState.cognitiveSynergy && Math.random() < 0.9) {
         const prevWeights = lastUnifiedState.cognitiveSynergy.layerWeights;
         synergyState = { ...lastUnifiedState.cognitiveSynergy };
         synergyState.layerWeights = {
-            logic: Math.max(0.6, Math.min(0.98, prevWeights.logic + (Math.random() - 0.5) * 0.05)),
-            emotion: Math.max(0.6, Math.min(0.98, prevWeights.emotion + (Math.random() - 0.5) * 0.05)),
-            creativity: Math.max(0.6, Math.min(0.98, prevWeights.creativity + (Math.random() - 0.5) * 0.05)),
-            ethics: Math.max(0.8, Math.min(0.99, prevWeights.ethics + (Math.random() - 0.4) * 0.02)), // tends to be high
-            strategy: Math.max(0.7, Math.min(0.98, prevWeights.strategy + (Math.random() - 0.45) * 0.04)),
+            logic: Math.max(0.6, Math.min(0.98, Number(prevWeights.logic) + (Math.random() - 0.5) * 0.05)),
+            emotion: Math.max(0.6, Math.min(0.98, Number(prevWeights.emotion) + (Math.random() - 0.5) * 0.05)),
+            creativity: Math.max(0.6, Math.min(0.98, Number(prevWeights.creativity) + (Math.random() - 0.5) * 0.05)),
+            ethics: Math.max(0.8, Math.min(0.99, Number(prevWeights.ethics) + (Math.random() - 0.4) * 0.02)), // tends to be high
+            strategy: Math.max(0.7, Math.min(0.98, Number(prevWeights.strategy) + (Math.random() - 0.45) * 0.04)),
         };
     } else {
         synergyState = {
@@ -366,10 +366,10 @@ export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligence
         };
     }
     
-    const weights = Object.values(synergyState.layerWeights);
-    const mean = weights.reduce((a, b) => a + b) / weights.length;
-    const stdDev = Math.sqrt(weights.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / weights.length);
-    synergyState.coherenceScore = Math.max(0, 1 - stdDev * 3); // Scale std dev to a 0-1 score
+    const weights = Object.values(synergyState.layerWeights).map(Number);
+    const mean = weights.reduce((a, b) => Number(a) + Number(b), 0) / weights.length;
+    const stdDev = Math.sqrt(weights.map(x => Math.pow(Number(x) - mean, 2)).reduce((a, b) => Number(a) + Number(b), 0) / weights.length);
+    synergyState.coherenceScore = Math.max(0, 1 - stdDev * 3);
 
     if (synergyState.coherenceScore < 0.85 && Math.random() > 0.7) {
         synergyState.disharmonySource = disharmonySources[Math.floor(Math.random() * (disharmonySources.length -1))];
@@ -378,6 +378,31 @@ export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligence
          synergyState.disharmonySource = "None";
          synergyState.correctionApplied = "Maintain balance";
     }
+    
+    // --- Del 38: Conscious Coherence ---
+    const { logic, emotion, creativity, strategy, ethics } = synergyState.layerWeights;
+    const harmonicIntelligence = Math.pow(logic * emotion * creativity * strategy * ethics, 1/5);
+
+    const resonanceStatuses: CognitiveResonance['status'][] = ['Stabil', 'Harmonisk', 'Fullständig', 'Justerad', 'Disharmonisk'];
+    const cognitiveResonanceMatrix: CognitiveResonance[] = [
+      { connection: 'Emotion ↔ Logik', resonance: Math.random() * 0.1 + 0.88, status: 'Harmonisk' },
+      { connection: 'Kreativitet ↔ Strategi', resonance: Math.random() * 0.1 + 0.85, status: 'Harmonisk' },
+      { connection: 'Etik ↔ Kausalitet', resonance: Math.random() * 0.05 + 0.95, status: 'Fullständig' },
+      { connection: 'Prediktion ↔ Självreflektion', resonance: Math.random() * 0.15 + 0.8, status: 'Justerad' },
+    ];
+    if (Math.random() > 0.9) { // Small chance of disharmony
+        const randomIndex = Math.floor(Math.random() * cognitiveResonanceMatrix.length);
+        cognitiveResonanceMatrix[randomIndex].resonance = Math.random() * 0.3 + 0.4;
+        cognitiveResonanceMatrix[randomIndex].status = 'Disharmonisk';
+    }
+
+    const consciousCoherenceState = {
+        logicalIntegrity: logic,
+        emotionalBalance: emotion,
+        creativeResonance: creativity,
+        strategicFocus: strategy,
+        ethicalTransparency: ethics
+    };
 
     const unifiedState: UnifiedIntelligenceState = {
         cognitiveIntegrityIndex: cii,
@@ -387,6 +412,9 @@ export const getUnifiedIntelligenceState = async (): Promise<UnifiedIntelligence
             activeLinks: Math.floor(Math.random() * 1000 + 4000),
         },
         cognitiveSynergy: synergyState,
+        harmonicIntelligence: harmonicIntelligence,
+        cognitiveResonanceMatrix: cognitiveResonanceMatrix,
+        consciousCoherenceState: consciousCoherenceState,
     };
     
     lastUnifiedState = unifiedState;
@@ -413,7 +441,6 @@ export const getCognitiveEconomyState = async (): Promise<CognitiveEconomyState 
 
     if (lastEconomyState && Math.random() < 0.85) { // High stickiness
         newState = { ...lastEconomyState };
-        // FIX: Explicitly cast state properties to Number before performing arithmetic operations.
         newState.processLoad = Number(newState.processLoad) + (Math.random() - 0.5) * 0.2;
         newState.memoryUsage = Number(newState.memoryUsage) + (Math.random() - 0.5) * 0.1;
         newState.avgLatency = Math.max(800, Number(newState.avgLatency) + (Math.random() - 0.5) * 300);
@@ -985,6 +1012,111 @@ export const getForesightState = async (): Promise<ForesightState | null> => {
     lastForesightState = newState;
     return cachedRequest('foresight-cache', async () => {
         await new Promise(res => setTimeout(res, 800));
+        return newState;
+    });
+};
+
+// --- Causality & Reality Simulation Service ---
+let lastCausalityState: CausalityState | null = null;
+export const getCausalityState = async (): Promise<CausalityState | null> => {
+    let newState: CausalityState;
+    const scenarios = [
+        "post_20_00", "change_thumbnail_contrast", "shorten_intro"
+    ];
+    const interventions = [
+        { action: "Förkorta intro", causalImpactIndex: 0.82, risk: 'low' as const },
+        { action: "Byta thumbnail-kontrast", causalImpactIndex: 0.73, risk: 'low' as const },
+        { action: "Ändra upload-tid", causalImpactIndex: 0.69, risk: 'moderate' as const },
+    ];
+
+    if (lastCausalityState && Math.random() < 0.95) { // very sticky
+        newState = { ...lastCausalityState };
+        if (Math.random() > 0.9) {
+            // slightly change something for dynamism
+            const randomIntervention = newState.interventionPlan[Math.floor(Math.random() * newState.interventionPlan.length)];
+            randomIntervention.causalImpactIndex = Math.min(0.95, Math.max(0.1, Number(randomIntervention.causalImpactIndex) + (Math.random() - 0.5) * 0.05));
+        }
+    } else {
+        newState = {
+            causalGraph: [
+                { id: 'Thumbnail Contrast', connections: [{ target: 'CTR', strength: 0.78, type: 'positive' }] },
+                { id: 'CTR', connections: [{ target: 'Watchtime', strength: 0.42, type: 'positive' }] },
+                { id: 'Intro Length', connections: [{ target: 'Retention', strength: 0.82, type: 'negative' }] },
+                { id: 'Publish Time', connections: [{ target: 'Initial Views', strength: 0.65, type: 'positive' }] },
+            ],
+            activeSimulation: {
+                scenario: scenarios[Math.floor(Math.random() * scenarios.length)],
+                expectedOutcomes: {
+                    metric: "CTR Change",
+                    change: `+${(Math.random() * 5 + 2).toFixed(1)}%`,
+                    confidence: Math.random() * 0.2 + 0.75,
+                },
+                risk: ['low', 'moderate', 'high'][Math.floor(Math.random() * 3)] as 'low' | 'moderate' | 'high',
+            },
+            interventionPlan: interventions.sort(() => 0.5 - Math.random()),
+            lastModelUpdate: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+        };
+    }
+    
+    lastCausalityState = newState;
+    return cachedRequest('causality-cache', async () => {
+        await new Promise(res => setTimeout(res, 900));
+        return newState;
+    });
+};
+
+// --- Reasoning Loop & Cognitive Evolution Service ---
+let lastReasoningState: ReasoningLoopState | null = null;
+let cycleCounter = 0;
+export const getReasoningLoopState = async (): Promise<ReasoningLoopState | null> => {
+    
+    const hypotheses = [
+        { hypothesis: "Title sentiment correlates with CTR", supportStrength: 0.82, dataSources: ["comment_tone", "click_rate"] },
+        { hypothesis: "Storytelling is an indirect growth factor", supportStrength: 0.75, dataSources: ["retention_data", "community_growth"] },
+        { hypothesis: "Emotional continuity amplifies retention", supportStrength: 0.91, dataSources: ["narrative_beats", "watch_time"] },
+    ];
+    const evaluations = [
+        { thought: "Hypothesis lacks sufficient long-term data", consistency: 0.8, depth: 0.7, ethics: 0.99 },
+        { thought: "Conclusion is sound but too narrow", consistency: 0.9, depth: 0.85, ethics: 0.99 },
+        { thought: "No bias detected, strong logical chain", consistency: 0.95, depth: 0.9, ethics: 0.99 },
+    ];
+    const insights = [
+        { insight: "Emotional continuity amplifies algorithmic retention", stability: 0.94, applicability: ["story-based", "community"] },
+        { insight: "Causal links are stronger than correlational trends", stability: 0.98, applicability: ["strategy", "planning"] },
+        { insight: "Authenticity in tone drives engagement", stability: 0.91, applicability: ["all_content"] },
+    ];
+    const calibrations = [
+        { deviation: "Too much hypothesis generation", correction: "Increase logic weight by +0.15" },
+        { deviation: "Overly conservative logic", correction: "Increase creative coefficient by +0.1" },
+        { deviation: "Slight emotional bias detected", correction: "Activate neutralization sequence" },
+    ];
+
+    let newState: ReasoningLoopState;
+
+    if (lastReasoningState && Math.random() < 0.9) {
+        newState = { ...lastReasoningState };
+        if (Math.random() > 0.8) { // Chance to advance the cycle
+             cycleCounter = (cycleCounter + 1) % hypotheses.length;
+             newState.activeHypothesis = hypotheses[cycleCounter];
+             newState.lastEvaluation = evaluations[cycleCounter];
+             newState.reinforcedInsight = insights[cycleCounter];
+             newState.lastCalibration = calibrations[cycleCounter];
+             newState.activeCycle = Number(newState.activeCycle) + 1;
+        }
+    } else {
+         cycleCounter = Math.floor(Math.random() * hypotheses.length);
+         newState = {
+            activeHypothesis: hypotheses[cycleCounter],
+            lastEvaluation: evaluations[cycleCounter],
+            reinforcedInsight: insights[cycleCounter],
+            lastCalibration: calibrations[cycleCounter],
+            activeCycle: lastReasoningState ? Number(lastReasoningState.activeCycle) + 1 : 1,
+        };
+    }
+    
+    lastReasoningState = newState;
+    return cachedRequest('reasoning-loop-cache', async () => {
+        await new Promise(res => setTimeout(res, 1100));
         return newState;
     });
 };

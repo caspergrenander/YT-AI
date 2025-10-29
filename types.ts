@@ -200,6 +200,12 @@ export interface CognitiveSynergyState {
     correctionApplied: string;
 }
 
+export interface CognitiveResonance {
+  connection: string;
+  resonance: number;
+  status: 'Stabil' | 'Harmonisk' | 'Fullständig' | 'Justerad' | 'Disharmonisk';
+}
+
 export interface UnifiedIntelligenceState {
     cognitiveIntegrityIndex: number;
     selfModel: SelfModelNode;
@@ -208,7 +214,17 @@ export interface UnifiedIntelligenceState {
         activeLinks: number;
     };
     cognitiveSynergy: CognitiveSynergyState;
+    harmonicIntelligence: number;
+    consciousCoherenceState: {
+        logicalIntegrity: number;
+        emotionalBalance: number;
+        creativeResonance: number;
+        strategicFocus: number;
+        ethicalTransparency: number;
+    };
+    cognitiveResonanceMatrix: CognitiveResonance[];
 }
+
 
 export interface CognitiveEconomyState {
     processLoad: number;
@@ -399,4 +415,68 @@ export interface ForesightState {
     culturalEcho: number; // 0-1
     goalAlignment: number; // 0-1
   };
+}
+
+export interface CausalGraphNode {
+  id: string;
+  connections: {
+    target: string;
+    strength: number;
+    type: 'positive' | 'negative';
+  }[];
+}
+
+export interface RealitySimulation {
+  scenario: string;
+  expectedOutcomes: {
+    metric: string;
+    change: string;
+    confidence: number;
+  };
+  risk: 'low' | 'moderate' | 'high';
+}
+
+export interface InterventionPlan {
+  action: string;
+  causalImpactIndex: number;
+  risk: 'low' | 'moderate' | 'high';
+}
+
+export interface CausalityState {
+  causalGraph: CausalGraphNode[];
+  activeSimulation: RealitySimulation;
+  interventionPlan: InterventionPlan[];
+  lastModelUpdate: string;
+}
+
+export interface Hypothesis {
+  hypothesis: string;
+  supportStrength: number;
+  dataSources: string[];
+}
+
+export interface MetaEvaluation {
+  thought: string;
+  consistency: number;
+  depth: number;
+  ethics: number;
+}
+
+export interface ReinforcedInsight {
+  insight: string;
+  stability: number;
+  applicability: string[];
+}
+
+export interface SelfCalibration {
+  deviation: string;
+  correction: string;
+}
+
+export interface ReasoningLoopState {
+  activeHypothesis: Hypothesis;
+  lastEvaluation: MetaEvaluation;
+  reinforcedInsight: ReinforcedInsight;
+  lastCalibration: SelfCalibration;
+  activeCycle: number;
 }

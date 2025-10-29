@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState } from './types';
-import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState } from './services/geminiService';
+import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState, AdaptiveCreativityState, EmergentAgencyState, SelfAwarenessState, ForesightState, CausalityState, ReasoningLoopState } from './types';
+import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState, getAdaptiveCreativityState, getEmergentAgencyState, getSelfAwarenessState, getForesightState, getCausalityState, getReasoningLoopState } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -22,6 +22,8 @@ import AdaptiveCreativityStatus from './components/AdaptiveCreativityStatus';
 import EmergentAgencyStatus from './components/IntentionalArchitectureStatus';
 import SelfAwarenessStatus from './components/SelfAwarenessStatus';
 import ForesightStatus from './components/ForesightStatus';
+import CausalityStatus from './components/CausalityStatus';
+import ReasoningLoopStatus from './components/ReasoningLoopStatus';
 
 
 const App: React.FC = () => {
@@ -51,6 +53,8 @@ const App: React.FC = () => {
   const [emergentAgency, setEmergentAgency] = useState<EmergentAgencyState | null>(null);
   const [selfAwarenessState, setSelfAwarenessState] = useState<SelfAwarenessState | null>(null);
   const [foresightState, setForesightState] = useState<ForesightState | null>(null);
+  const [causalityState, setCausalityState] = useState<CausalityState | null>(null);
+  const [reasoningLoopState, setReasoningLoopState] = useState<ReasoningLoopState | null>(null);
 
 
   const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
@@ -248,6 +252,18 @@ const App: React.FC = () => {
         } catch (err) { console.error("Failed to get foresight state:", err); }
     }
 
+    const fetchCausalityState = async () => {
+        try {
+            setCausalityState(await getCausalityState());
+        } catch (err) { console.error("Failed to get causality state:", err); }
+    }
+
+    const fetchReasoningLoopState = async () => {
+        try {
+            setReasoningLoopState(await getReasoningLoopState());
+        } catch (err) { console.error("Failed to get reasoning loop state:", err); }
+    }
+
 
     const intervals = [
       { func: fetchInteractivePerception, time: 3000 },
@@ -262,7 +278,9 @@ const App: React.FC = () => {
       { func: fetchAdaptiveCreativity, time: 8000 },
       { func: fetchEmergentAgency, time: 8500 },
       { func: fetchSelfAwareness, time: 9000 },
-      { func: fetchForesightState, time: 9500 }
+      { func: fetchForesightState, time: 9500 },
+      { func: fetchCausalityState, time: 10000 },
+      { func: fetchReasoningLoopState, time: 10500 },
     ];
 
     intervals.forEach(i => i.func()); // Initial fetch
@@ -615,6 +633,8 @@ const App: React.FC = () => {
                   <EmergentAgencyStatus state={emergentAgency} />
                   <SelfAwarenessStatus state={selfAwarenessState} />
                   <ForesightStatus state={foresightState} />
+                  <CausalityStatus state={causalityState} />
+                  <ReasoningLoopStatus state={reasoningLoopState} />
                 </div>
             </header>
             {activeChat ? (
