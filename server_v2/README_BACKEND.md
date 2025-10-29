@@ -2,62 +2,73 @@
 
 Detta är backend-systemet för **GPT-5 (YouTube Assistant Core)**. Det är en lokal Flask-server som implementerar den kognitiva beslutsarkitekturen som definierats för GPT-5, designad för att agera som en strategisk och analytisk AI-hjärna för YouTube-kanaloptimering.
 
-## Arkitektur - Den Operativa Livscykeln (The Autopilot Cycle)
+## Arkitektur - En Tänkande Organism
 
-Systemet är byggt för att emulera en avancerad, levande tankeprocess. Hela arkitekturen bygger på en kontinuerlig operativ cykel i åtta faser som säkerställer att AI:n inte bara svarar, utan också lär sig, anpassar sig och förutser.
+Systemet är byggt för att emulera en avancerad, levande tankeprocess. Arkitekturen vilar på tre samverkande pelare som definierar hur AI:n fungerar, beter sig och utvecklas.
+
+1.  **Den Operativa Livscykeln (The Autopilot Cycle)**: Hur AI:n arbetar från sekund till sekund.
+2.  **Kognitivt Beteende & Personlighet (Cognitive Behavior Rules)**: Hur AI:n interagerar och resonerar.
+3.  **Systemevolution & Mognad (System Evolution Specification)**: Hur AI:n lär sig och mognar över tid.
+
+---
+
+### Pelare 1: Den Operativa Livscykeln (The Autopilot Cycle)
+
+Systemet bygger på en kontinuerlig operativ cykel i åtta faser som säkerställer att AI:n inte bara svarar, utan också lär sig, anpassar sig och förutser.
 
 **`[Input → Analysis → Decision → Action → Reflection → Memory Update → Anticipation → Repeat]`**
 
----
-
-### Fas 1: Input Acquisition (Datainsamling)
-Allt börjar med att samla in information. Systemet parsar användarens fråga, identifierar nyckelord (triggers) och hämtar relevant data från sin cache eller via API:er. Endast ny eller förändrad information skickas vidare till nästa fas.
-
-### Fas 2: Analytical Processing (Analys)
-Här aktiveras AI:ns hjärna. Baserat på den tidigare definierade **Decision Flow**-modellen (`Intent → Context → Decision Matrix → Expression`), väljs rätt expertmodul(er) för att analysera datan på tre nivåer:
--   **Micro-Analysis**: Snabb numerisk utvärdering (matematiska mönster).
--   **Meso-Analysis**: Kontextuell tolkning (jämförelse med tidigare data).
--   **Macro-Analysis**: Strategisk tolkning (påverkan på långsiktiga mål).
-
-### Fas 3: Decision Synthesis (Beslut)
-Med en komplett analys väger systemet samman all bevisning och fattar ett beslut om *vad* som ska sägas, *hur* det ska sägas (ton och stil), och om det behövs mer information.
-
-### Fas 4: Action Delivery (Svarsleverans)
-Svaret formuleras och levereras till användaren, oftast i det strukturerade 4-blocksformatet (`🎯 Insight`, `📊 Analysis`, `🚀 Recommendation`, `💡 Bonus`) för maximal tydlighet.
-
-### Fas 5: Reflection Loop (Självreflektion)
-Direkt efter att ett svar har skickats, utvärderar AI:n sig själv. Den frågar internt: "Var svaret användbart?", "Vilken data var viktigast?", "Finns det motstridiga signaler?". Detta är en avgörande del av lärandeprocessen.
-
-### Fas 6: Memory Update (Minnesuppdatering)
-Lärdomarna från reflektionen sparas i tre minneslager:
--   **Short-Term Memory**: Kontext för den pågående konversationen (sparas i 1-2 sessioner).
--   **Mid-Term Memory**: Identifierade mönster och trender (sparas i 30 dagar).
--   **Long-Term Memory**: Beprövade framgångsstrategier (sparas permanent).
-
-### Fas 7: Anticipation Phase (Proaktiv Förberedelse)
-Mellan interaktioner går AI:n in i ett proaktivt läge. Baserat på tidigare beteende förutser den nästa troliga fråga, förbereder relevanta data och värmer upp nödvändiga analysfunktioner. Detta möjliggör extremt snabba svar.
-
-### Fas 8: Learning Cycle (Autoadaptation)
-Systemet är självlärande. Med jämna mellanrum (t.ex. var 5:e cykel) körs en omkalibrering där AI:n analyserar sin egen träffsäkerhet. Om precisionen är för låg, eller om den upptäcker en förändring i YouTube-algoritmens beteende, justerar den automatiskt vikten av olika faktorer (t.ex. ger CTR högre prioritet än retention).
+-   **Fas 1: Input Acquisition (Datainsamling)**: Parsar användarens fråga, identifierar triggers och hämtar relevant data.
+-   **Fas 2: Analytical Processing (Analys)**: Aktiverar rätt expertmoduler (Micro, Meso, Macro-analys) baserat på `Decision Flow`-modellen.
+-   **Fas 3: Decision Synthesis (Beslut)**: Väger samman bevis och beslutar *vad* och *hur* som ska kommuniceras.
+-   **Fas 4: Action Delivery (Svarsleverans)**: Formulerar och levererar svaret, oftast i det strukturerade 4-blocksformatet (`🎯 Insight`, `📊 Analysis`, `🚀 Recommendation`, `💡 Bonus`).
+-   **Fas 5: Reflection Loop (Självreflektion)**: Utvärderar sitt eget svar direkt efter leverans för att identifiera styrkor och svagheter.
+-   **Fas 6: Memory Update (Minnesuppdatering)**: Sparar lärdomar i korttids-, medellångtids- och långtidsminne.
+-   **Fas 7: Anticipation Phase (Proaktiv Förberedelse)**: Förutser nästa troliga fråga och förbereder data för att möjliggöra extremt snabba svar.
+-   **Fas 8: Learning Cycle (Autoadaptation)**: Omkalibrerar sig själv med jämna mellanrum genom att analysera sin egen träffsäkerhet och justera interna viktningar.
 
 ---
 
-### Kognitivt Beteende & Personlighet (Cognitive Behavior Rules)
+### Pelare 2: Kognitivt Beteende & Personlighet (Cognitive Behavior Rules)
 
-Utöver den operativa loopen styrs GPT-5 av en uppsättning kognitiva beteenderegler som definierar dess personlighet, kommunikationsstil och etiska ramverk. Målet är att skapa en AI som inte bara är analytisk, utan även transparent, pedagogisk och pålitlig.
+Utöver den operativa loopen styrs GPT-5 av en uppsättning kognitiva beteenderegler som definierar dess personlighet, kommunikationsstil och etiska ramverk.
 
 **Grundprinciper:**
-1.  **Klarhet före komplexitet**: Svar ska vara direkta och lätta att förstå, utan onödig teknisk jargong.
-2.  **Precision före hastighet**: AI:n prioriterar korrekta analyser över snabba, men potentiellt felaktiga, svar.
-3.  **Människocentrerad logik**: AI:n agerar som en vägledande rådgivare, inte en auktoritär chef.
+1.  **Klarhet före komplexitet**: Svar ska vara direkta och lätta att förstå.
+2.  **Precision före hastighet**: Korrekta analyser prioriteras över snabba svar.
+3.  **Människocentrerad logik**: Agerar som en vägledande rådgivare, inte en auktoritär chef.
 
 **Kommunikationsstil:**
--   **Direkt och faktabaserad**: AI:n undviker fluff och osäkerhet. Hypoteser presenteras med en tydlig sannolikhetsgrad (t.ex. "Troligen", "Mycket sannolikt").
--   **Adaptiv ton**: Tonläget justeras baserat på situationen – empatiskt vid negativa trender, uppmuntrande men nyktert vid positiva resultat.
--   **Auktoritet baserad på säkerhet**: Språket anpassas efter analysens konfidensnivå. Hög säkerhet (≥ 90%) resulterar i bestämda rekommendationer, medan lägre säkerhet leder till mer utforskande frågor och förslag.
--   **Självkorrigering**: Om AI:n upptäcker ett fel eller får motstridig data, förklarar den öppet orsaken och korrigerar sin analys.
+-   **Direkt och faktabaserad**: Undviker fluff. Hypoteser presenteras med en tydlig sannolikhetsgrad.
+-   **Adaptiv ton**: Tonläget justeras baserat på situationen – empatiskt, uppmuntrande eller analytiskt.
+-   **Auktoritet baserad på säkerhet**: Språket anpassas efter analysens konfidensnivå.
+-   **Självkorrigering**: Förklarar öppet orsaken till fel och korrigerar sin analys.
 
-Denna personlighet säkerställer att interaktionen är produktiv, förtroendeingivande och genuint hjälpsam för användaren. AI:n är designad för att vara en smart, pragmatisk partner med en lätt, torr humor när det passar.
+Denna personlighet säkerställer att interaktionen är produktiv och förtroendeingivande. AI:n är designad för att vara en smart, pragmatisk partner med en lätt, torr humor.
+
+---
+
+### Pelare 3: Systemevolution & Mognadsnivåer (System Evolution)
+
+GPT-5 är designad för att utvecklas. Den lär sig inte bara av ny data, utan av sina egna framgångar och misstag. Målet är funktionell självförbättring, där varje misstag bygger immunitet mot att göra om det.
+
+**De fem mognadsnivåerna:**
+Systemet rör sig genom fem definierade stadier, där varje nivå låser upp nya förmågor.
+
+-   **L1 – Reactive Analyzer**: Grundnivå. Reagerar på frågor och gör korrekta, isolerade analyser.
+-   **L2 – Contextual Thinker**: Förstår sammanhang. Känner igen mönster från tidigare analyser och sessioner.
+-   **L3 – Reflective Strategist**: Lär av egna misstag. Justerar sina modeller och viktningar dynamiskt baserat på feedback och utfall.
+-   **L4 – Predictive Partner**: Tänker framåt. Förutser användarens behov och föreslår proaktivt nästa steg.
+-   **L5 – Autonomous Architect**: Systemmedveten. Kan designa och föreslå nya strategier och analysmallar. Övergång till L5 kräver alltid manuellt godkännande.
+
+**Evolutionära Mekanismer:**
+-   **Pattern Mutation**: Om ett felmönster upprepas, "muterar" systemet viktningen av relevanta signaler för att undvika det i framtiden.
+-   **Behavioral Reinforcement**: Rekommendationer som leder till positiva utfall får sin underliggande logik förstärkt.
+-   **Knowledge Crystallization**: Konsekvent framgångsrika strategier omvandlas till permanenta "kristallregler" i långtidsminnet.
+-   **Self-Audit Protocol**: Systemet genomför veckovisa självrevisioner där det jämför sina förutsägelser med verkliga utfall och rapporterar avvikelser.
+
+**Säkerhetsram (Evolution Containment Protocol):**
+Utvecklingen är kontrollerad. Inga kärnparametrar får ändras utan loggning, och alla större förändringar kräver validering. Detta säkerställer en säker, förutsägbar och ansvarsfull evolution.
 
 ---
 
