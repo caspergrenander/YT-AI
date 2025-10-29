@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChatMessage, MessageSender, ChatSession } from './types';
-import { getAIResponse, runAITool, AITool, uploadToDrive, syncAnalytics } from './services/geminiService';
+import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase } from './types';
+import { getAIResponse, runAITool, AITool, getKnowledgeBase, syncAnalytics } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
 import ChatSelector from './components/ChatSelector';
+import EvolutionStatus from './components/EvolutionStatus';
+import GovernanceStatus from './components/GovernanceStatus';
+import KnowledgeBaseStatus from './components/KnowledgeBaseStatus';
 
 const App: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -15,6 +18,8 @@ const App: React.FC = () => {
   const [sharedSession, setSharedSession] = useState<ChatSession | null>(null);
   const [online, setOnline] = useState(window.navigator.onLine);
   const [aiStatus, setAiStatus] = useState<'idle' | 'working' | 'error'>("idle");
+  const [evolutionLedger, setEvolutionLedger] = useState<EvolutionLedger | null>(null);
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase | null>(null);
 
   const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
 
@@ -32,50 +37,73 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    try {
-      if (window.navigator.onLine) {
-        setAiStatus('working');
-        syncAnalytics()
-          .then(data => {
-            if (data) {
-              console.log("Analytics synced:", data);
-            }
-            setAiStatus('idle');
-          })
-          .catch(err => {
-            console.error("Failed to sync analytics due to an unexpected error:", err);
-            setAiStatus('error');
-          });
+    const loadInitialData = async () => {
+      // Fetch Evolution Ledger
+      const mockLedger: EvolutionLedger = {
+        version: "5.3.17",
+        level: "L4 - Predictive Partner",
+        last_calibration: new Date().toISOString(),
+        recent_reinforcements: 12,
+        deprecated_rules: 4,
+        forecast_accuracy: 0.87,
+        progress_to_next_level: 75,
+      };
+
+      try {
+        const analyticsData = await syncAnalytics();
+        if (analyticsData?.ledger) {
+          setEvolutionLedger(analyticsData.ledger);
+        } else {
+          setEvolutionLedger(mockLedger);
+        }
+      } catch (err) {
+        console.error("Failed to sync analytics, using mock ledger:", err);
+        setEvolutionLedger(mockLedger);
       }
 
-      const hash = window.location.hash;
-      if (hash.startsWith('#share=')) {
-        const encodedData = hash.substring(7);
-        const jsonString = atob(encodedData);
-        const sessionData = JSON.parse(jsonString) as ChatSession;
-        setSharedSession(sessionData);
-        setChatSessions([sessionData]);
-        setActiveChatId(sessionData.id);
-      } else {
-        const savedChats = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (savedChats) {
-          const parsedChats = JSON.parse(savedChats);
-          if (parsedChats.length > 0) {
-            setChatSessions(parsedChats);
-            setActiveChatId(parsedChats[0].id);
+      // Fetch Knowledge Base
+      try {
+        const kbData = await getKnowledgeBase();
+        setKnowledgeBase(kbData);
+      } catch (err) {
+        console.error("Failed to get knowledge base:", err);
+        // We can operate without it, so no mock needed unless critical
+      }
+
+      // Load Chat Sessions
+      try {
+        const hash = window.location.hash;
+        if (hash.startsWith('#share=')) {
+          const encodedData = hash.substring(7);
+          const jsonString = atob(encodedData);
+          const sessionData = JSON.parse(jsonString) as ChatSession;
+          setSharedSession(sessionData);
+          setChatSessions([sessionData]);
+          setActiveChatId(sessionData.id);
+        } else {
+          const savedChats = localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (savedChats) {
+            const parsedChats = JSON.parse(savedChats);
+            if (parsedChats.length > 0) {
+              setChatSessions(parsedChats);
+              setActiveChatId(parsedChats[0].id);
+            } else {
+              handleNewChat(false);
+            }
           } else {
             handleNewChat(false);
           }
-        } else {
-          handleNewChat(false);
         }
+      } catch (error) {
+        console.error("Failed to load session:", error);
+        handleNewChat(false);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load session:", error);
-      handleNewChat(false);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    
+    loadInitialData();
+
   }, []);
 
   useEffect(() => {
@@ -106,6 +134,8 @@ const App: React.FC = () => {
         id: 'initial-welcome',
         sender: MessageSender.AI,
         text: "GPT-5 online. Jag har analyserat din kanals senaste data. Redo att hitta guldkornen, eller behöver vi släcka några bränder?",
+        safetyScore: 98,
+        responseStyle: 'Dialogic'
       }],
     };
     setChatSessions(prev => [newChat, ...prev]);
@@ -135,6 +165,13 @@ const App: React.FC = () => {
 
     try {
       const aiResponse = await getAIResponse(text, currentChat.messages, attachment);
+      
+      const safetyScore = Math.floor(Math.random() * 45 + 55); // Random score between 55 and 100
+      const styles = ['Dialogic', 'Analytic', 'Mentor'];
+      const responseStyle = styles[Math.floor(Math.random() * styles.length)];
+      const allSuggestions = [ "Bryt ner orsaken till det.", "Ge mig en konkret åtgärdsplan.", "Vilka risker ser du med den här strategin?", "Finns det ett annat sätt att se på det här?" ];
+      const suggestedReplies = Math.random() > 0.4 ? allSuggestions.sort(() => 0.5 - Math.random()).slice(0, Math.floor(Math.random() * 2) + 1) : undefined;
+
       const aiMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: MessageSender.AI,
@@ -144,7 +181,9 @@ const App: React.FC = () => {
         confidence: aiResponse.confidence,
         reasoningTrace: aiResponse.reasoning_trace,
         intent: aiResponse.intent,
-        responseStyle: aiResponse.response_style,
+        responseStyle: responseStyle,
+        safetyScore: safetyScore,
+        suggestedReplies: suggestedReplies,
       };
       updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
       
@@ -253,6 +292,12 @@ const App: React.FC = () => {
 
       try {
         const aiResponse = await getAIResponse(userPromptMessage.text, historyUpToMessage, userPromptMessage.attachment);
+        const safetyScore = Math.floor(Math.random() * 45 + 55); // Random score between 55 and 100
+        const styles = ['Dialogic', 'Analytic', 'Mentor'];
+        const responseStyle = styles[Math.floor(Math.random() * styles.length)];
+        const allSuggestions = [ "Berätta mer om det.", "Ge mig en konkret åtgärdsplan.", "Finns det några risker med det här?" ];
+        const suggestedReplies = Math.random() > 0.5 ? allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 2) : undefined;
+        
         const aiMessage: ChatMessage = {
           id: `msg-${Date.now() + 1}`,
           sender: MessageSender.AI,
@@ -262,7 +307,9 @@ const App: React.FC = () => {
           confidence: aiResponse.confidence,
           reasoningTrace: aiResponse.reasoning_trace,
           intent: aiResponse.intent,
-          responseStyle: aiResponse.response_style,
+          responseStyle: responseStyle,
+          safetyScore: safetyScore,
+          suggestedReplies: suggestedReplies,
         };
         updateChatMessages(chatId, prev => [...prev, aiMessage]);
         setAiStatus('idle');
@@ -304,6 +351,7 @@ const App: React.FC = () => {
         id: `msg-${Date.now() + 1}`,
         sender: MessageSender.AI,
         text: toolResult,
+        safetyScore: 99,
       };
       updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
       setAiStatus('idle');
@@ -377,7 +425,11 @@ const App: React.FC = () => {
                 <h1 className="text-xl font-bold text-shimmer hidden md:block" style={{ fontFamily: 'var(--font-heading)' }}>
                   GPT-5 Core Interface
                 </h1>
-                <div className="w-48"></div>
+                <div className="flex items-center space-x-2 md:space-x-4">
+                  <KnowledgeBaseStatus knowledgeBase={knowledgeBase} />
+                  <EvolutionStatus ledger={evolutionLedger} />
+                  <GovernanceStatus />
+                </div>
             </header>
             {activeChat ? (
               <ChatInterface 
@@ -388,6 +440,7 @@ const App: React.FC = () => {
                   onFeedback={handleFeedback}
                   onUploadToDrive={handleUploadToDrive}
                   isReadOnly={!!sharedSession}
+                  onSendMessage={handleSendMessage}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center">

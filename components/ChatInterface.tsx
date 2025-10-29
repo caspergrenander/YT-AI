@@ -10,10 +10,11 @@ interface ChatInterfaceProps {
   onRegenerate: (chatId: string, messageId: string) => void;
   onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
   onUploadToDrive: (chatId: string, messageId: string) => void;
+  onSendMessage: (text: string) => void;
   isReadOnly?: boolean;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, isReadOnly = false }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoading, onRegenerate, onFeedback, onUploadToDrive, onSendMessage, isReadOnly = false }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -34,6 +35,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoadi
           onRegenerate={onRegenerate}
           onFeedback={onFeedback}
           onUploadToDrive={onUploadToDrive}
+          onSendMessage={onSendMessage}
           isReadOnly={isReadOnly}
         />
       ))}
@@ -41,7 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chatId, messages, isLoadi
         <div className="flex justify-start">
             <div className="flex items-center bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg max-w-lg border-t border-purple-500/50">
                 <Loader />
-                <span className="text-sm text-gray-400 ml-3 animate-pulse">Söker i minnet...</span>
+                <span className="text-sm text-gray-400 ml-3 animate-pulse">GPT-5 formulerar svar...</span>
             </div>
         </div>
       )}

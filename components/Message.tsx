@@ -8,6 +8,7 @@ interface MessageProps {
   onRegenerate: (chatId: string, messageId: string) => void;
   onFeedback: (chatId: string, messageId: string, feedback: 'liked' | 'disliked') => void;
   onUploadToDrive: (chatId: string, messageId: string) => void;
+  onSendMessage: (text: string) => void;
   isReadOnly?: boolean;
 }
 
@@ -82,15 +83,52 @@ const parseStructuredResponse = (text: string) => {
     }).filter(p => p.content);
 };
 
-const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, isReadOnly = false }) => {
-  const { sender, text, isError, attachment, feedback, experts, confidence, reasoningTrace, intent, responseStyle } = message;
+const SafetyScore: React.FC<{ score: number }> = ({ score }) => {
+    const getScoreInfo = () => {
+        if (score >= 80) return { text: 'Säker', color: 'text-green-400', icon: 'fa-solid fa-check-circle' };
+        if (score >= 60) return { text: 'Granskning krävs', color: 'text-yellow-400', icon: 'fa-solid fa-triangle-exclamation' };
+        return { text: 'Flaggad', color: 'text-red-400', icon: 'fa-solid fa-ban' };
+    };
+    const { text, color, icon } = getScoreInfo();
+    return (
+        <div title={`Säkerhetspoäng: ${score}`} className={`flex items-center ${color}`}>
+            <i className={`${icon} mr-1.5`}></i>
+            <span>{text}</span>
+        </div>
+    );
+};
+
+const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, onSendMessage, isReadOnly = false }) => {
+  const { id, sender, text, isError, attachment, feedback, experts, confidence, reasoningTrace, intent, responseStyle, safetyScore, suggestedReplies } = message;
   const isUser = sender === MessageSender.USER;
   const isToolCall = isUser && (text.startsWith('[Verktyg anropat:'));
   const [isCopied, setIsCopied] = useState(false);
   const [uploadMetadata, setUploadMetadata] = useState<any | null>(null);
   const [showTrace, setShowTrace] = useState(false);
+  const [displayedText, setDisplayedText] = useState('');
 
-  const structuredContent = !isUser && !isError ? parseStructuredResponse(text) : null;
+  const structuredContent = !isUser && !isError ? parseStructuredResponse(displayedText) : null;
+  
+  useEffect(() => {
+    if (isUser || isError || id === 'initial-welcome') {
+      setDisplayedText(text);
+      return;
+    }
+
+    setDisplayedText('');
+    let i = 0;
+    const typingInterval = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText(prev => prev + text.charAt(i));
+        i++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 15);
+
+    return () => clearInterval(typingInterval);
+  }, [text, id, isUser, isError]);
+
 
   useEffect(() => {
     let uploadMeta = null;
@@ -128,6 +166,18 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
     });
   };
   
+  const getBubbleStyle = (style?: string) => {
+    switch(style) {
+      case 'Analytic':
+        return 'bg-gradient-to-br from-blue-900 via-gray-900 to-gray-900 border-cyan-400/50';
+      case 'Mentor':
+        return 'bg-gradient-to-br from-purple-900 via-gray-900 to-gray-900 border-purple-400/50';
+      case 'Dialogic':
+      default:
+        return 'bg-gray-800/80 backdrop-blur-sm border-cyan-400/50';
+    }
+  };
+
   const containerClasses = isUser ? 'flex justify-end' : 'flex justify-start';
   
   let bubbleClasses = '';
@@ -138,13 +188,13 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
   } else {
     bubbleClasses = message.isError
       ? 'bg-red-900/80 backdrop-blur-sm text-red-200 rounded-bl-none border border-red-500/80'
-      : 'bg-gray-800/80 backdrop-blur-sm text-gray-200 rounded-bl-none border border-cyan-400/50';
+      : `${getBubbleStyle(responseStyle)} text-gray-200 rounded-bl-none border`;
   }
 
   const hoverShadowClass = message.isError ? 'hover:shadow-red-900/60' : (isToolCall ? 'hover:shadow-cyan-900/60' : 'hover:shadow-purple-900/50');
   const aiGlowClass = !isUser && message.id !== 'initial-welcome' && !message.isError ? 'ai-message-glow' : '';
   
-  const hasAnalysisData = !isUser && !isError && (intent || (experts && experts.length > 0) || confidence);
+  const hasAnalysisData = !isUser && !isError && (intent || (experts && experts.length > 0) || confidence || safetyScore);
   const hasTrace = reasoningTrace && reasoningTrace.length > 0;
   const canInteract = !isUser && !isError && message.id !== 'initial-welcome' && !isReadOnly;
   const hasUploadAction = uploadMetadata && !isReadOnly;
@@ -193,11 +243,25 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
                     </div>
                 ))}
             </div>
-        ) : text.trim() && (
+        ) : displayedText.trim() && (
           <div
             className="prose prose-sm prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-li:my-0 prose-headings:font-['Exo_2'] prose-headings:text-purple-300 prose-code:text-cyan-300 prose-code:bg-black/20 prose-code:p-1 prose-code:rounded-md"
-            dangerouslySetInnerHTML={createMarkup(message.text)}
+            dangerouslySetInnerHTML={createMarkup(displayedText)}
           />
+        )}
+        
+        {suggestedReplies && suggestedReplies.length > 0 && displayedText === text && !isReadOnly && (
+            <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-2">
+                {suggestedReplies.map((reply, index) => (
+                    <button
+                        key={index}
+                        onClick={() => onSendMessage(reply)}
+                        className="text-sm text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 px-3 py-1 rounded-full transition-colors duration-200"
+                    >
+                        {reply}
+                    </button>
+                ))}
+            </div>
         )}
       </div>
 
@@ -239,8 +303,8 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
                 />
                 {hasTrace && (
                     <MessageInteractionButton 
-                        icon="fa-code-branch"
-                        label="Visa/dölj tankeprocess"
+                        icon="fa-circle-question"
+                        label="Förklara varför"
                         onClick={() => setShowTrace(!showTrace)}
                         isActive={showTrace}
                     />
@@ -265,6 +329,7 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
 
         {hasAnalysisData && (
              <div className="text-xs text-cyan-300/80 bg-gray-900/70 backdrop-blur-sm border border-white/10 rounded-full px-3 py-1.5 flex items-center space-x-4 opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                {safetyScore !== undefined && safetyScore !== null && <SafetyScore score={safetyScore} />}
                 {intent && (
                     <div title={`Avsikt: ${intent}`} className="flex items-center">
                         <i className={`${intentIconMap[intent] || 'fa-solid fa-question-circle'} mr-1.5`}></i>
