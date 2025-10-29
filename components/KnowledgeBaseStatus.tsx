@@ -23,11 +23,25 @@ const getRuleStatusInfo = (status: KnowledgeRule['status']) => {
 
 const KnowledgeBaseStatus: React.FC<KnowledgeBaseStatusProps> = ({ knowledgeBase }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<'rules' | 'graph' | 'learning'>('rules');
+    const [activeTab, setActiveTab] = useState<'rules' | 'graph' | 'learning' | 'memory'>('rules');
 
     if (!knowledgeBase) {
         return <div className="w-10"></div>;
     }
+    
+    const TabButton: React.FC<{id: any, activeTab: any, setActiveTab: any, icon: string, children: React.ReactNode}> = ({id, activeTab, setActiveTab, icon, children}) => (
+        <button
+            onClick={() => setActiveTab(id)}
+            className={`flex items-center px-4 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 focus:outline-none ${
+                activeTab === id
+                    ? 'bg-purple-500/20 text-white border-b-2 border-cyan-400'
+                    : 'text-gray-400 hover:bg-white/5'
+            }`}
+        >
+            <i className={`${icon} mr-2`}></i>
+            {children}
+        </button>
+    );
 
     const renderModalContent = () => {
         switch (activeTab) {
@@ -95,6 +109,26 @@ const KnowledgeBaseStatus: React.FC<KnowledgeBaseStatusProps> = ({ knowledgeBase
                          ))}
                      </div>
                  );
+            case 'memory':
+                return (
+                    <div className="space-y-3 pr-2 overflow-y-auto max-h-[50vh]">
+                         <p className="text-sm text-gray-400 mb-4">Lagrade perceptuella mönster baserat på tidigare framgångar. Systemet använder detta för att bygga 'intuition'.</p>
+                        {knowledgeBase.perceptualMemory.sort((a,b) => b.confidence - a.confidence).map(item => (
+                            <div key={item.id} className="p-3 bg-gray-950/60 border border-cyan-500/30 rounded-lg">
+                                <p className="font-mono text-sm text-cyan-200">{item.pattern}</p>
+                                <div className="flex justify-between items-center mt-2">
+                                    <span className="font-semibold text-green-400">{item.effect}</span>
+                                    <div className={`text-right`}>
+                                        <div className={`font-bold text-lg ${getConfidenceColor(item.confidence)}`}>
+                                            {(item.confidence * 100).toFixed(0)}%
+                                        </div>
+                                        <div className="text-xs text-gray-400">Säkerhet</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
         }
     };
 
@@ -113,6 +147,7 @@ const KnowledgeBaseStatus: React.FC<KnowledgeBaseStatusProps> = ({ knowledgeBase
                         <TabButton id="rules" activeTab={activeTab} setActiveTab={setActiveTab} icon="fa-solid fa-check-double">Aktiva Regler</TabButton>
                         <TabButton id="graph" activeTab={activeTab} setActiveTab={setActiveTab} icon="fa-solid fa-share-nodes">Kunskapsgraf</TabButton>
                         <TabButton id="learning" activeTab={activeTab} setActiveTab={setActiveTab} icon="fa-solid fa-magnifying-glass-chart">Inlärningskö</TabButton>
+                        <TabButton id="memory" activeTab={activeTab} setActiveTab={setActiveTab} icon="fa-solid fa-camera-retro">Perceptuellt Minne</TabButton>
                     </div>
                 </div>
 
@@ -123,19 +158,6 @@ const KnowledgeBaseStatus: React.FC<KnowledgeBaseStatusProps> = ({ knowledgeBase
         </div>
     );
     
-    const TabButton: React.FC<{id: any, activeTab: any, setActiveTab: any, icon: string, children: React.ReactNode}> = ({id, activeTab, setActiveTab, icon, children}) => (
-        <button
-            onClick={() => setActiveTab(id)}
-            className={`flex items-center px-4 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 focus:outline-none ${
-                activeTab === id
-                    ? 'bg-purple-500/20 text-white border-b-2 border-cyan-400'
-                    : 'text-gray-400 hover:bg-white/5'
-            }`}
-        >
-            <i className={`${icon} mr-2`}></i>
-            {children}
-        </button>
-    );
 
     return (
         <>

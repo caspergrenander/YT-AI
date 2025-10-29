@@ -49,11 +49,16 @@ const intentIconMap: { [key: string]: string } = {
 };
 
 const moduleIconMap: { [key: string]: string } = {
-    'Strategic Planning': 'fa-solid fa-compass',
+    'Strategic Planner': 'fa-solid fa-compass',
     'Algorithmic Intelligence': 'fa-solid fa-robot',
-    'Multimodal Understanding': 'fa-solid fa-film',
-    'Performance Prediction': 'fa-solid fa-crystal-ball',
+    'Multimodal Analyst': 'fa-solid fa-film',
+    'Performance Auditor': 'fa-solid fa-crystal-ball',
     'Reflection Engine': 'fa-solid fa-brain',
+    'VisionEngine': 'fa-solid fa-eye',
+    'AudioEngine': 'fa-solid fa-ear-listen',
+    'TextEngine': 'fa-solid fa-file-alt',
+    'MetricsEngine': 'fa-solid fa-chart-line',
+    'Coordinator (Core)': 'fa-solid fa-atom',
 };
 
 const getConfidenceInfo = (confidence: number): { text: string; icon: string; color: string; } => {
@@ -99,7 +104,7 @@ const SafetyScore: React.FC<{ score: number }> = ({ score }) => {
 };
 
 const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeedback, onUploadToDrive, onSendMessage, isReadOnly = false }) => {
-  const { id, sender, text, isError, attachment, feedback, experts, confidence, reasoningTrace, intent, responseStyle, safetyScore, suggestedReplies } = message;
+  const { id, sender, text, isError, attachment, feedback, experts, confidence, reasoningTrace, intent, responseStyle, safetyScore, suggestedReplies, visionAnalysis, audioAnalysis, textAnalysis } = message;
   const isUser = sender === MessageSender.USER;
   const isToolCall = isUser && (text.startsWith('[Verktyg anropat:'));
   const [isCopied, setIsCopied] = useState(false);
@@ -108,6 +113,7 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
   const [displayedText, setDisplayedText] = useState('');
 
   const structuredContent = !isUser && !isError ? parseStructuredResponse(displayedText) : null;
+  const hasSensoryData = !isUser && !isError && (visionAnalysis || audioAnalysis || textAnalysis);
   
   useEffect(() => {
     if (isUser || isError || id === 'initial-welcome') {
@@ -228,6 +234,44 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
             </div>
         )}
 
+        {hasSensoryData && (
+          <div className="mb-3 border-b border-purple-500/20 pb-3">
+              <h4 className="text-sm font-semibold text-purple-300 mb-2 flex items-center" style={{fontFamily: 'var(--font-heading)'}}>
+                  <i className="fa-solid fa-atom mr-2 animate-spin" style={{animationDuration: '3s'}}></i>
+                  Multimodal Sensory Analysis
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {visionAnalysis && (
+                      <div className="bg-black/20 p-2 rounded-md space-y-1">
+                          <div className="font-bold text-cyan-300 flex items-center"><i className="fa-solid fa-eye w-5"></i>Vision</div>
+                          <div className="flex items-center justify-between"><span>Dominant färg:</span> <div className="w-4 h-4 rounded border border-white/20" style={{backgroundColor: visionAnalysis.dominantColor}}></div></div>
+                          <div className="flex items-center justify-between"><span>Fokus:</span> <span className="capitalize">{visionAnalysis.subjectFocus}</span></div>
+                          <div className="flex items-center justify-between"><span>Känsla:</span> <span className="capitalize">{visionAnalysis.emotion}</span></div>
+                          <div className="flex items-center justify-between"><span>Estetik-poäng:</span> <span className="font-mono">{visionAnalysis.aestheticScore.toFixed(2)}</span></div>
+                      </div>
+                  )}
+                  {audioAnalysis && (
+                      <div className="bg-black/20 p-2 rounded-md space-y-1">
+                          <div className="font-bold text-cyan-300 flex items-center"><i className="fa-solid fa-ear-listen w-5"></i>Audio</div>
+                          <div className="flex items-center justify-between"><span>Taltempo (WPM):</span> <span className="font-mono">{audioAnalysis.speechRate}</span></div>
+                          <div className="flex items-center justify-between"><span>Medel-pitch (Hz):</span> <span className="font-mono">{audioAnalysis.avgPitch}</span></div>
+                          <div className="flex items-center justify-between"><span>Energinivå:</span> <span className="capitalize">{audioAnalysis.energy}</span></div>
+                          <div className="flex items-center justify-between"><span>Känsla:</span> <span className="capitalize">{audioAnalysis.emotion}</span></div>
+                          <div className="flex items-center justify-between"><span>Tydlighet:</span> <span className="font-mono">{audioAnalysis.clarityScore.toFixed(2)}</span></div>
+                      </div>
+                  )}
+                  {textAnalysis && (
+                      <div className="bg-black/20 p-2 rounded-md col-span-full space-y-1">
+                          <div className="font-bold text-cyan-300 flex items-center"><i className="fa-solid fa-file-alt w-5"></i>Text</div>
+                          <div className="flex items-center justify-between"><span>Tonalitet:</span> <span className="capitalize">{textAnalysis.tone}</span></div>
+                          <div className="flex items-center justify-between"><span>Hook-styrka:</span> <span className="font-mono">{textAnalysis.hookStrength.toFixed(2)}</span></div>
+                          <div className="flex items-center justify-start gap-2 pt-1"><span>Ämnen:</span> {textAnalysis.topicClusters.map(t => <span key={t} className="bg-purple-500/30 text-purple-200 px-1.5 py-0.5 rounded text-xs">{t}</span>)}</div>
+                      </div>
+                  )}
+              </div>
+          </div>
+        )}
+
         {structuredContent ? (
             <div className="space-y-4">
                 {structuredContent.map((part, index) => (
@@ -339,7 +383,7 @@ const Message: React.FC<MessageProps> = ({ chatId, message, onRegenerate, onFeed
                 {experts && experts.length > 0 && (
                     <div title={`Primär modul: ${experts[0]}${responseStyle ? `\nStil: ${responseStyle}` : ''}`} className="flex items-center">
                         <i className={`${moduleIconMap[experts[0]] || 'fa-solid fa-microchip'} mr-1.5`}></i>
-                        <span>{experts[0].replace('Strategic Planning', 'Strategi').replace('Algorithmic Intelligence', 'Algoritm').replace('Multimodal Understanding', 'Kreativ').replace('Performance Prediction', 'Prognos')}</span>
+                        <span>{experts[0].replace('Strategic Planner', 'Strateg').replace('Algorithmic Intelligence', 'Algoritm').replace('Multimodal Analyst', 'Kreativ').replace('Performance Auditor', 'Audit').replace('Coordinator (Core)', 'Kärna')}</span>
                     </div>
                 )}
                 {confidence !== undefined && confidence !== null && (() => {

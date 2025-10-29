@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase } from './types';
-import { getAIResponse, runAITool, AITool, getKnowledgeBase, syncAnalytics } from './services/geminiService';
+import { ChatMessage, MessageSender, ChatSession, EvolutionLedger, KnowledgeBase, Agent, CognitiveSyncState, AdaptationLogEntry, LongTermMemory, EthicalCoreState, UnifiedIntelligenceState, CognitiveEconomyState, InteractivePerceptionState, AITool, EmotionEngineState, CollectiveIntelligenceState, CulturalIntelligenceState, LinguisticEvolutionState } from './types';
+import { getAIResponse, runAITool, getKnowledgeBase, syncAnalytics, getAgentStatuses, getCognitiveSyncState, getLongTermMemory, getEthicalCoreState, getUnifiedIntelligenceState, getCognitiveEconomyState, getInteractivePerceptionState, getEmotionEngineState, getCollectiveIntelligenceState, getCulturalIntelligenceState, getLinguisticEvolutionState } from './services/geminiService';
 import Sidebar from './components/Sidebar';
 import ChatInterface from './components/ChatInterface';
 import InputBar from './components/InputBar';
@@ -8,6 +8,17 @@ import ChatSelector from './components/ChatSelector';
 import EvolutionStatus from './components/EvolutionStatus';
 import GovernanceStatus from './components/GovernanceStatus';
 import KnowledgeBaseStatus from './components/KnowledgeBaseStatus';
+import AgentStatus from './components/AgentStatus';
+import CognitiveSyncStatus from './components/CognitiveSyncStatus';
+import MemoryStatus from './components/MemoryStatus';
+import UnifiedIntelligenceStatus from './components/UnifiedIntelligenceStatus';
+import CognitiveEconomyStatus from './components/CognitiveEconomyStatus';
+import InteractivePerceptionStatus from './components/InteractivePerceptionStatus';
+import EmotionEngineStatus from './components/EmotionEngineStatus';
+import CollectiveIntelligenceStatus from './components/CollectiveIntelligenceStatus';
+import CulturalIntelligenceStatus from './components/CulturalIntelligenceStatus';
+import LinguisticEvolutionStatus from './components/LinguisticEvolutionStatus';
+
 
 const App: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -20,6 +31,19 @@ const App: React.FC = () => {
   const [aiStatus, setAiStatus] = useState<'idle' | 'working' | 'error'>("idle");
   const [evolutionLedger, setEvolutionLedger] = useState<EvolutionLedger | null>(null);
   const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBase | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [cognitiveSyncState, setCognitiveSyncState] = useState<CognitiveSyncState | null>(null);
+  const [adaptationLog, setAdaptationLog] = useState<AdaptationLogEntry[]>([]);
+  const [longTermMemory, setLongTermMemory] = useState<LongTermMemory | null>(null);
+  const [ethicalState, setEthicalState] = useState<EthicalCoreState | null>(null);
+  const [unifiedState, setUnifiedState] = useState<UnifiedIntelligenceState | null>(null);
+  const [cognitiveEconomy, setCognitiveEconomy] = useState<CognitiveEconomyState | null>(null);
+  const [interactivePerception, setInteractivePerception] = useState<InteractivePerceptionState | null>(null);
+  const [emotionEngineState, setEmotionEngineState] = useState<EmotionEngineState | null>(null);
+  const [collectiveIntelligence, setCollectiveIntelligence] = useState<CollectiveIntelligenceState | null>(null);
+  const [culturalIntelligence, setCulturalIntelligence] = useState<CulturalIntelligenceState | null>(null);
+  const [linguisticEvolution, setLinguisticEvolution] = useState<LinguisticEvolutionState | null>(null);
+
 
   const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
 
@@ -67,8 +91,26 @@ const App: React.FC = () => {
         setKnowledgeBase(kbData);
       } catch (err) {
         console.error("Failed to get knowledge base:", err);
-        // We can operate without it, so no mock needed unless critical
       }
+
+      // Fetch Agent Statuses
+      try {
+        const agentData = await getAgentStatuses();
+        if(agentData) {
+          setAgents(agentData);
+        }
+      } catch (err) {
+        console.error("Failed to get agent statuses:", err);
+      }
+      
+      // Fetch Long-Term Memory
+      try {
+        const memoryData = await getLongTermMemory();
+        setLongTermMemory(memoryData);
+      } catch (err) {
+        console.error("Failed to get long-term memory:", err);
+      }
+
 
       // Load Chat Sessions
       try {
@@ -105,6 +147,94 @@ const App: React.FC = () => {
     loadInitialData();
 
   }, []);
+  
+  // Polling for dynamic system states
+  useEffect(() => {
+    const fetchSyncState = async () => {
+        try {
+            const syncData = await getCognitiveSyncState();
+            if (syncData) {
+                setCognitiveSyncState(prev => {
+                    if (prev && prev.mode !== syncData.mode) {
+                        const newLogEntry: AdaptationLogEntry = {
+                            timestamp: new Date().toLocaleTimeString('sv-SE'),
+                            event: `Växlade till ${syncData.mode} Mode.`
+                        };
+                        setAdaptationLog(logs => [newLogEntry, ...logs.slice(0, 9)]);
+                    }
+                    return syncData;
+                });
+            }
+        } catch (err) { console.error("Failed to get cognitive sync state:", err); }
+    };
+    
+    const fetchEthicalState = async () => {
+        try {
+            setEthicalState(await getEthicalCoreState());
+        } catch (err) { console.error("Failed to get ethical core state:", err); }
+    };
+
+    const fetchUnifiedState = async () => {
+      try {
+        setUnifiedState(await getUnifiedIntelligenceState());
+      } catch (err) { console.error("Failed to get unified intelligence state:", err); }
+    }
+
+    const fetchCognitiveEconomy = async () => {
+      try {
+        setCognitiveEconomy(await getCognitiveEconomyState());
+      } catch (err) { console.error("Failed to get cognitive economy state:", err); }
+    }
+    
+    const fetchInteractivePerception = async () => {
+      try {
+        setInteractivePerception(await getInteractivePerceptionState());
+      } catch (err) { console.error("Failed to get interactive perception state:", err); }
+    }
+    
+    const fetchEmotionEngine = async () => {
+        try {
+            setEmotionEngineState(await getEmotionEngineState());
+        } catch (err) { console.error("Failed to get emotion engine state:", err); }
+    }
+    
+    const fetchCollectiveIntelligence = async () => {
+        try {
+            setCollectiveIntelligence(await getCollectiveIntelligenceState());
+        } catch (err) { console.error("Failed to get collective intelligence state:", err); }
+    }
+    
+    const fetchCulturalIntelligence = async () => {
+        try {
+            setCulturalIntelligence(await getCulturalIntelligenceState());
+        } catch (err) { console.error("Failed to get cultural intelligence state:", err); }
+    }
+    
+    const fetchLinguisticEvolution = async () => {
+        try {
+            setLinguisticEvolution(await getLinguisticEvolutionState());
+        } catch (err) { console.error("Failed to get linguistic evolution state:", err); }
+    }
+
+
+    const intervals = [
+      { func: fetchInteractivePerception, time: 3000 },
+      { func: fetchUnifiedState, time: 4000 },
+      { func: fetchEmotionEngine, time: 4500 },
+      { func: fetchSyncState, time: 5000 },
+      { func: fetchCollectiveIntelligence, time: 5500 },
+      { func: fetchCognitiveEconomy, time: 6000 },
+      { func: fetchCulturalIntelligence, time: 6500 },
+      { func: fetchLinguisticEvolution, time: 7000 },
+      { func: fetchEthicalState, time: 7500 }
+    ];
+
+    intervals.forEach(i => i.func()); // Initial fetch
+    const intervalIds = intervals.map(i => setInterval(i.func, i.time));
+    
+    return () => intervalIds.forEach(clearInterval);
+  }, []);
+
 
   useEffect(() => {
     if (!sharedSession) {
@@ -184,6 +314,9 @@ const App: React.FC = () => {
         responseStyle: responseStyle,
         safetyScore: safetyScore,
         suggestedReplies: suggestedReplies,
+        visionAnalysis: aiResponse.visionAnalysis,
+        audioAnalysis: aiResponse.audioAnalysis,
+        textAnalysis: aiResponse.textAnalysis,
       };
       updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
       
@@ -310,6 +443,9 @@ const App: React.FC = () => {
           responseStyle: responseStyle,
           safetyScore: safetyScore,
           suggestedReplies: suggestedReplies,
+          visionAnalysis: aiResponse.visionAnalysis,
+          audioAnalysis: aiResponse.audioAnalysis,
+          textAnalysis: aiResponse.textAnalysis,
         };
         updateChatMessages(chatId, prev => [...prev, aiMessage]);
         setAiStatus('idle');
@@ -426,9 +562,19 @@ const App: React.FC = () => {
                   GPT-5 Core Interface
                 </h1>
                 <div className="flex items-center space-x-2 md:space-x-4">
+                  <InteractivePerceptionStatus state={interactivePerception} />
+                  <UnifiedIntelligenceStatus state={unifiedState} />
+                  <EmotionEngineStatus state={emotionEngineState} />
+                  <MemoryStatus memory={longTermMemory} />
+                  <CognitiveSyncStatus state={cognitiveSyncState} log={adaptationLog} />
+                  <CognitiveEconomyStatus state={cognitiveEconomy} />
+                  <AgentStatus agents={agents} />
                   <KnowledgeBaseStatus knowledgeBase={knowledgeBase} />
                   <EvolutionStatus ledger={evolutionLedger} />
-                  <GovernanceStatus />
+                  <GovernanceStatus state={ethicalState} />
+                  <CollectiveIntelligenceStatus state={collectiveIntelligence} />
+                  <CulturalIntelligenceStatus state={culturalIntelligence} />
+                  <LinguisticEvolutionStatus state={linguisticEvolution} />
                 </div>
             </header>
             {activeChat ? (

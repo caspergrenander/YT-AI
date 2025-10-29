@@ -1,5 +1,7 @@
+
 import React from 'react';
-import { AITool } from '../services/geminiService';
+// Fix: Import `AITool` from the centralized types module instead of the service.
+import { AITool } from '../types';
 
 interface SidebarProps {
   onSendMessage: (prompt: string) => void;
@@ -31,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick }) => {
 
   const expertSections = [
       {
-          title: "Strategic Planning",
+          title: "Strategic Planner",
           icon: "fa-solid fa-compass",
           accent: "purple" as const,
           prompts: [
@@ -51,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick }) => {
           ]
       },
       {
-          title: "Multimodal Understanding",
+          title: "Multimodal Analyst",
           icon: "fa-solid fa-film",
           accent: "amber" as const,
           prompts: [
@@ -61,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick }) => {
           ]
       },
       {
-          title: "Performance Prediction",
+          title: "Performance Auditor",
           icon: "fa-solid fa-crystal-ball",
           accent: "cyan" as const,
           prompts: [

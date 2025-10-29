@@ -80,7 +80,7 @@ const InputBar: React.FC<InputBarProps> = ({ onSendMessage, isLoading }) => {
             ref={fileInputRef} 
             onChange={handleFileChange} 
             className="hidden" 
-            accept="image/*,application/pdf,.doc,.docx,.txt"
+            accept="image/*,audio/*,video/*,application/pdf,.doc,.docx,.txt"
             disabled={isLoading}
         />
         <button 
