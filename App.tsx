@@ -16,7 +16,7 @@ const App: React.FC = () => {
   const [online, setOnline] = useState(window.navigator.onLine);
   const [aiStatus, setAiStatus] = useState<'idle' | 'working' | 'error'>("idle");
 
-  const LOCAL_STORAGE_KEY = 'casper-autopilot-chats';
+  const LOCAL_STORAGE_KEY = 'gpt5-core-chats';
 
   useEffect(() => {
     const handleOnline = () => setOnline(true);
@@ -43,7 +43,6 @@ const App: React.FC = () => {
             setAiStatus('idle');
           })
           .catch(err => {
-            // This will now only catch truly unexpected errors
             console.error("Failed to sync analytics due to an unexpected error:", err);
             setAiStatus('error');
           });
@@ -102,11 +101,11 @@ const App: React.FC = () => {
   const handleNewChat = (activate: boolean = true) => {
     const newChat: ChatSession = {
       id: `chat-${Date.now()}`,
-      title: "Ny Konversation",
+      title: "Ny GPT-5 Session",
       messages: [{
         id: 'initial-welcome',
         sender: MessageSender.AI,
-        text: "Hej! Jag är din lokala AI-kollega, Casper. Hur kan vi tillsammans krossa dina YouTube-mål idag? Ladda upp en fil eller ställ en fråga för att komma igång!",
+        text: "GPT-5 online. Jag har analyserat din kanals senaste data. Redo att hitta guldkornen, eller behöver vi släcka några bränder?",
       }],
     };
     setChatSessions(prev => [newChat, ...prev]);
@@ -135,15 +134,21 @@ const App: React.FC = () => {
     setAiStatus('working');
 
     try {
-      const { response: aiResponseText } = await getAIResponse(text, currentChat.messages, attachment);
+      const aiResponse = await getAIResponse(text, currentChat.messages, attachment);
       const aiMessage: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: MessageSender.AI,
-        text: aiResponseText,
+        text: aiResponse.message,
+        metadata: aiResponse,
+        experts: aiResponse.experts,
+        confidence: aiResponse.confidence,
+        reasoningTrace: aiResponse.reasoning_trace,
+        intent: aiResponse.intent,
+        responseStyle: aiResponse.response_style,
       };
       updateChatMessages(currentChat.id, prev => [...prev, aiMessage]);
       
-      if (currentChat.messages.length <= 2 && currentChat.title === "Ny Konversation") {
+      if (currentChat.messages.length <= 2 && currentChat.title === "Ny GPT-5 Session") {
         const newTitle = text ? text.substring(0, 30) + '...' : `Analys av ${attachment?.name}`;
         handleRenameChat(currentChat.id, newTitle);
       }
@@ -171,11 +176,22 @@ const App: React.FC = () => {
 
     setAiStatus('working');
     try {
-      const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
-      if (!metadataMatch || !metadataMatch[1]) {
-        throw new Error("Kunde inte extrahera metadata från AI-svaret.");
-      }
-      const metadata = JSON.parse(metadataMatch[1]);
+        let metadata;
+        if (aiMessage.metadata && aiMessage.metadata.readyForUpload) {
+            metadata = aiMessage.metadata.upload_metadata || aiMessage.metadata;
+        } else {
+            const metadataMatch = aiMessage.text.match(/```json\n([\s\S]*?)\n```/);
+            if (metadataMatch && metadataMatch[1]) {
+                const parsed = JSON.parse(metadataMatch[1]);
+                if (parsed.readyForUpload) {
+                    metadata = parsed;
+                }
+            }
+        }
+
+        if (!metadata) {
+            throw new Error("Kunde inte extrahera giltig metadata från AI-svaret.");
+        }
       
       if (!metadata.videoPath) {
         throw new Error("Metadata från AI:n saknar nödvändig 'videoPath' för optimering.");
@@ -236,11 +252,17 @@ const App: React.FC = () => {
       setAiStatus('working');
 
       try {
-        const { response: aiResponseText } = await getAIResponse(userPromptMessage.text, historyUpToMessage, userPromptMessage.attachment);
+        const aiResponse = await getAIResponse(userPromptMessage.text, historyUpToMessage, userPromptMessage.attachment);
         const aiMessage: ChatMessage = {
           id: `msg-${Date.now() + 1}`,
           sender: MessageSender.AI,
-          text: aiResponseText,
+          text: aiResponse.message,
+          metadata: aiResponse,
+          experts: aiResponse.experts,
+          confidence: aiResponse.confidence,
+          reasoningTrace: aiResponse.reasoning_trace,
+          intent: aiResponse.intent,
+          responseStyle: aiResponse.response_style,
         };
         updateChatMessages(chatId, prev => [...prev, aiMessage]);
         setAiStatus('idle');
@@ -298,11 +320,7 @@ const App: React.FC = () => {
       setIsResponding(false);
     }
   };
-  
-  const handlePromptClick = (prompt: string) => {
-      handleSendMessage(prompt);
-  };
-  
+    
   const handleShareChat = (id: string) => {
     const session = chatSessions.find(s => s.id === id);
     if (session) {
@@ -316,14 +334,14 @@ const App: React.FC = () => {
   if (isLoading) {
     return (
         <div className="w-full h-screen flex items-center justify-center">
-            <h1 className="text-2xl font-bold text-shimmer">Laddar AI Hjärnan...</h1>
+            <h1 className="text-2xl font-bold text-shimmer">Laddar GPT-5 Kärnan...</h1>
         </div>
     );
   }
   
   const aiStatusMessage = {
-      working: 'AI analyserar...',
-      error: 'Ett fel uppstod i AI-kärnan',
+      working: 'GPT-5 resonerar...',
+      error: 'Ett fel uppstod i GPT-5 kärnan',
   }[aiStatus] || null;
 
   return (
@@ -342,9 +360,9 @@ const App: React.FC = () => {
             )}
        </div>
       <div className={`flex h-screen max-h-screen bg-gray-900 text-gray-100 ${(aiStatus !== 'idle' || !online) ? 'pt-6' : ''}`}>
-        <Sidebar onPromptClick={handlePromptClick} onToolClick={handleToolClick} />
+        <Sidebar onSendMessage={handleSendMessage} onToolClick={handleToolClick} />
         <main className="flex-1 flex flex-col relative">
-            <header className="flex items-center justify-between p-3 border-b border-purple-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
+            <header className="flex items-center justify-between p-3 border-b border-cyan-500/30 bg-gray-950/60 backdrop-blur-xl z-10">
                 <ChatSelector 
                   sessions={chatSessions}
                   activeId={activeChatId}
@@ -357,7 +375,7 @@ const App: React.FC = () => {
                   onRenameComplete={() => setStartRenamingId(null)}
                 />
                 <h1 className="text-xl font-bold text-shimmer hidden md:block" style={{ fontFamily: 'var(--font-heading)' }}>
-                  Casper_AutoPilot
+                  GPT-5 Core Interface
                 </h1>
                 <div className="w-48"></div>
             </header>
@@ -374,7 +392,7 @@ const App: React.FC = () => {
             ) : (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center text-gray-500">
-                  <p>Välj en konversation eller starta en ny.</p>
+                  <p>Välj en session eller starta en ny.</p>
                 </div>
               </div>
             )}

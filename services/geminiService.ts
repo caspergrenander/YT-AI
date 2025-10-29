@@ -1,32 +1,30 @@
 import { ChatMessage } from '../types';
 
-// Fix: Use `process.env.VITE_API_BASE` to align with the definition in `vite.config.ts`.
-// @ts-ignore - This will be replaced by Vite during the build process, but TypeScript is unaware of it without Node.js types.
-const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5000";
+// @ts-ignore
+const API_BASE = process.env.VITE_API_BASE || "http://127.0.0.1:5100";
 
-// Fix: Define and export the AITool type based on its usage across the application.
 export type AITool = 'transcribe' | 'translate' | 'clip' | 'write' | 'optimize_video';
 
 /**
- * Skickar prompt och kontext till den lokala AI-hjärnan.
+ * Skickar prompt och kontext till GPT-5:s kärna.
  */
 export const getAIResponse = async (
     prompt: string,
     history: ChatMessage[],
     attachment?: { data: string; mimeType: string; name: string }
-): Promise<{ response: string }> => {
+): Promise<any> => {
     const requestBody: any = { 
-        prompt, 
+        message: prompt, 
         context: {
             history: history.map(m => ({ role: m.sender, content: m.text }))
         }
     };
     if (attachment) {
         const base64Data = attachment.data.split(',')[1];
-        requestBody.attachment = { data: base64Data, mimeType: attachment.mimeType, name: attachment.name };
+        requestBody.context.attachment = { data: base64Data, mimeType: attachment.mimeType, name: attachment.name };
     }
 
-    const response = await fetch(`${API_BASE}/api/chat`, {
+    const response = await fetch(`${API_BASE}/api/gpt5/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -34,7 +32,7 @@ export const getAIResponse = async (
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Fel vid AI-anrop: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(`Fel vid GPT-5-anrop: ${response.status} ${response.statusText} - ${errorText}`);
     }
     return await response.json();
 };
@@ -76,12 +74,9 @@ export const uploadToDrive = async (filePath: string, metadata: Record<string, a
  * Hämtar aktuell YouTube-data från Apps Script.
  */
 export const syncAnalytics = async (): Promise<any> => {
-    // This helper function attempts to fetch data, with a fallback to localStorage.
     const cachedRequest = async (key: string, fn: () => Promise<any>) => {
         try {
-            // Only attempt the network request if the user is online.
             if (!window.navigator.onLine) {
-                // Throw to enter the catch block and try reading from cache.
                 throw new Error("Offline, using cache.");
             }
             const data = await fn();
@@ -93,7 +88,6 @@ export const syncAnalytics = async (): Promise<any> => {
                 console.log("Could not sync with server, using cached data.");
                 return JSON.parse(cachedData);
             }
-            // If the API call fails AND there's no cache, return null silently.
             return null;
         }
     };

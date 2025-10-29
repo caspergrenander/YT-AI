@@ -2,103 +2,97 @@ import React from 'react';
 import { AITool } from '../services/geminiService';
 
 interface SidebarProps {
-  onPromptClick: (prompt: string) => void;
+  onSendMessage: (prompt: string) => void;
   onToolClick: (tool: AITool, promptText: string) => void;
 }
 
-const PromptButton: React.FC<{ text: string; icon?: string; onClick: () => void; isTool?: boolean }> = ({ text, icon, onClick, isTool = false }) => (
+const ExpertButton: React.FC<{ text: string; icon: string; onClick: () => void; accentColor: 'purple' | 'cyan' | 'amber' | 'rose' }> = ({ text, icon, onClick, accentColor }) => {
+    const colors = {
+        purple: { text: 'text-purple-400', border: 'hover:border-purple-400/80', shadow: 'hover:shadow-purple-500/40', bg: 'hover:bg-purple-500/10' },
+        cyan: { text: 'text-cyan-400', border: 'hover:border-cyan-400/80', shadow: 'hover:shadow-cyan-500/40', bg: 'hover:bg-cyan-500/10' },
+        amber: { text: 'text-amber-400', border: 'hover:border-amber-400/80', shadow: 'hover:shadow-amber-500/40', bg: 'hover:bg-amber-500/10' },
+        rose: { text: 'text-rose-400', border: 'hover:border-rose-400/80', shadow: 'hover:shadow-rose-500/40', bg: 'hover:bg-rose-500/10' },
+    };
+    const c = colors[accentColor];
+
+    return (
     <button
       onClick={onClick}
-      className="group w-full text-left text-sm p-3 bg-white/5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 flex items-center border border-white/10 hover:border-purple-400/80 hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:bg-purple-500/10"
+      className={`group w-full text-left text-sm p-3 bg-white/5 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500 flex items-center border border-white/10 ${c.border} ${c.shadow} ${c.bg}`}
     >
-      {icon && <i className={`${icon} w-6 text-center mr-2 ${isTool ? 'text-cyan-400' : 'text-purple-400'} group-hover:text-cyan-300 transition-all duration-300 group-hover:drop-shadow-[0_0_5px_#22d3ee] group-hover:scale-125 group-hover:-rotate-6`}></i>}
+      <i className={`${icon} w-6 text-center mr-2 ${c.text} transition-all duration-300 group-hover:scale-125 group-hover:-rotate-6`}></i>
       <span className="z-10">{text}</span>
     </button>
   );
+}
 
-const Sidebar: React.FC<SidebarProps> = ({ onPromptClick, onToolClick }) => {
-  const keyInsightsPrompts = [
-    { text: "Analysera senaste videons prestanda", icon: "fa-solid fa-magnifying-glass-chart" },
-    { text: "Vilka spel presterar bäst just nu?", icon: "fa-solid fa-gamepad" },
-    { text: "Vad driver mest engagemang i mina videor?", icon: "fa-solid fa-fire" },
-    { text: "Vilken typ av titel ger bäst CTR?", icon: "fa-solid fa-eye" },
-  ];
 
-  const toolPrompts = [
-    { 
-      text: "Transkribera video från URL", 
-      icon: "fa-solid fa-closed-captioning", 
-      tool: 'transcribe' as AITool, 
-      promptText: "Ange YouTube-videons URL för transkribering:" 
-    },
-    { 
-      text: "Generera Titel & Taggar", 
-      icon: "fa-solid fa-pencil-alt", 
-      tool: 'write' as AITool,
-      promptText: "Beskriv videons innehåll för att generera metadata:"
-    },
-    { 
-      text: "Föreslå Short-klipp", 
-      icon: "fa-solid fa-scissors", 
-      tool: 'clip' as AITool,
-      promptText: "Ange URL eller ämne för videon att klippa från:"
-    },
-    { 
-      text: "Översätt text till engelska", 
-      icon: "fa-solid fa-language", 
-      tool: 'translate' as AITool,
-      promptText: "Ange texten du vill översätta:"
-    },
-  ];
-  
-  const conversationStarters = [
-    "Föreslå en titel för en ny Helldivers 2 co-op video.",
-    "Brainstorma 3 video-idéer baserat på mitt mest framgångsrika innehåll.",
+const Sidebar: React.FC<SidebarProps> = ({ onSendMessage, onToolClick }) => {
+
+  const expertSections = [
+      {
+          title: "Strategic Planning",
+          icon: "fa-solid fa-compass",
+          accent: "purple" as const,
+          prompts: [
+              { text: "Formulera en 3-månaders tillväxtstrategi", icon: "fa-solid fa-calendar-days" },
+              { text: "Identifiera 'content gaps' i min nisch", icon: "fa-solid fa-magnifying-glass-chart" },
+              { text: "Sätt upp mätbara KPI:er för nästa kvartal", icon: "fa-solid fa-flag-checkered" },
+          ]
+      },
+      {
+          title: "Algorithmic Intelligence",
+          icon: "fa-solid fa-robot",
+          accent: "rose" as const,
+          prompts: [
+              { text: "Analysera varför min senaste video underpresterade", icon: "fa-solid fa-chart-line" },
+              { text: "Förutsäg CTR för en ny titel/miniatyr-idé", icon: "fa-solid fa-percentage" },
+              { text: "Vilka algoritmiska signaler bör jag fokusera på nu?", icon: "fa-solid fa-broadcast-tower" },
+          ]
+      },
+      {
+          title: "Multimodal Understanding",
+          icon: "fa-solid fa-film",
+          accent: "amber" as const,
+          prompts: [
+              { text: "Ge visuell feedback på den här miniatyren", icon: "fa-solid fa-eye" },
+              { text: "Analysera den emotionella tonen i mitt manus", icon: "fa-solid fa-comment-dots" },
+              { text: "Jämför två miniatyrer och förklara skillnaden", icon: "fa-solid fa-images" },
+          ]
+      },
+      {
+          title: "Performance Prediction",
+          icon: "fa-solid fa-crystal-ball",
+          accent: "cyan" as const,
+          prompts: [
+              { text: "Simulera visningar för en video om [ämne]", icon: "fa-solid fa-chart-bar" },
+              { text: "Prediktera engagemang för nästa veckas video", icon: "fa-solid fa-users" },
+              { text: "Skapa en 'bästa/värsta fall'-prognos", icon: "fa-solid fa-wand-magic-sparkles" },
+          ]
+      }
   ];
 
   return (
-    <aside className="w-64 md:w-80 h-full bg-gray-950/50 backdrop-blur-md border-r border-purple-500/20 p-4 flex-col hidden sm:flex overflow-y-auto">
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
-          <i className="fa-solid fa-chart-line mr-2"></i>
-          Dynamiska Insikter
-        </h2>
-        <div className="space-y-3">
-          {keyInsightsPrompts.map((prompt, index) => (
-            <PromptButton key={index} text={prompt.text} icon={prompt.icon} onClick={() => onPromptClick(prompt.text)} />
-          ))}
+    <aside className="w-64 md:w-80 h-full bg-gray-950/50 backdrop-blur-md border-r border-cyan-500/20 p-4 flex-col hidden sm:flex overflow-y-auto">
+      {expertSections.map(section => (
+        <div className="mb-8" key={section.title}>
+            <h2 className={`text-lg font-semibold mb-4 text-${section.accent}-400 text-glow`} style={{ fontFamily: 'var(--font-heading)', '--glow-color': `var(--tw-color-${section.accent}-400)` } as React.CSSProperties}>
+                <i className={`${section.icon} mr-2`}></i>
+                {section.title}
+            </h2>
+            <div className="space-y-3">
+                {section.prompts.map((prompt) => (
+                    <ExpertButton 
+                        key={prompt.text} 
+                        text={prompt.text} 
+                        icon={prompt.icon} 
+                        onClick={() => onSendMessage(prompt.text)}
+                        accentColor={section.accent}
+                    />
+                ))}
+            </div>
         </div>
-      </div>
-
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4 text-cyan-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
-          <i className="fa-solid fa-toolbox mr-2"></i>
-          Lokala Agenter
-        </h2>
-        <div className="space-y-3">
-          {toolPrompts.map((prompt, index) => (
-            <PromptButton 
-              key={index} 
-              text={prompt.text} 
-              icon={prompt.icon} 
-              onClick={() => onToolClick(prompt.tool, prompt.promptText)}
-              isTool={true}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-purple-400 text-glow" style={{ fontFamily: 'var(--font-heading)' }}>
-          <i className="fa-solid fa-comments mr-2"></i>
-          Kreativa Startare
-        </h2>
-        <div className="space-y-3">
-          {conversationStarters.map((prompt, index) => (
-            <PromptButton key={index} text={prompt} icon="fa-solid fa-sparkles" onClick={() => onPromptClick(prompt)} />
-          ))}
-        </div>
-      </div>
+      ))}
     </aside>
   );
 };

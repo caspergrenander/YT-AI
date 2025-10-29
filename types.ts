@@ -3,7 +3,11 @@ export enum MessageSender {
   AI = 'ai',
 }
 
-// Fix: Define and export the ChatMessage interface, which was missing.
+export interface ReasoningStep {
+  step: string;
+  details: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender: MessageSender;
@@ -15,9 +19,14 @@ export interface ChatMessage {
     name: string;
   };
   feedback?: 'liked' | 'disliked' | null;
+  metadata?: Record<string, any>;
+  experts?: string[];
+  confidence?: number;
+  reasoningTrace?: ReasoningStep[];
+  intent?: string;
+  responseStyle?: string;
 }
 
-// Fix: Define and export the ChatSession interface, which was missing.
 export interface ChatSession {
   id: string;
   title: string;

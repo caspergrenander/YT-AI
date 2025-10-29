@@ -1,5 +1,5 @@
 {
-  "name": "Casper_AutoPilot (Local Edition)",
-  "description": "En helt lokal AI-kollega som analyserar, genererar och optimerar YouTube-innehåll. Arbetar offline och använder endast nätet för Drive- och Apps Script-synk.",
+  "name": "GPT-5 Core Interface",
+  "description": "Ett avancerat gränssnitt för GPT-5, en lokal, multimodal AI med kedjad resonans och expertmoduler för innehållsskapande och strategisk analys.",
   "requestFramePermissions": []
 }

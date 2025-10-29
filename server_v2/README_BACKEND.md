@@ -1,15 +1,63 @@
-# Casper_AutoPilot Backend v2 - README
+# GPT-5 YouTube Assistant - Backend Core README
 
-Detta är backend-systemet för **Casper_AutoPilot (Local Edition)**. Det är en lokal Flask-server designad för att fungera "offline-first" samtidigt som den synkroniserar med Google Drive och Google Sheets via Google Apps Script.
+Detta är backend-systemet för **GPT-5 (YouTube Assistant Core)**. Det är en lokal Flask-server som implementerar den kognitiva beslutsarkitekturen som definierats för GPT-5, designad för att agera som en strategisk och analytisk AI-hjärna för YouTube-kanaloptimering.
 
-## Arkitektur
+## Arkitektur - Den Operativa Livscykeln (The Autopilot Cycle)
 
-Systemet är uppdelat i flera komponenter:
-- **`app.py`**: Huvudservern som hanterar alla HTTP-förfrågningar.
-- **`core/`**: Innehåller kärnlogiken för AI, schemaläggning och loggning.
-- **`modules/`**: Specifika "agenter" som interagerar med externa tjänster (Google) eller utför tunga lokala uppgifter (videobearbetning).
-- **`utils/`**: Hjälpfunktioner för cache, konfiguration och filhantering.
-- **`google_apps_script/`**: Scripts som körs på Googles servrar för att automatisera dataflöden.
+Systemet är byggt för att emulera en avancerad, levande tankeprocess. Hela arkitekturen bygger på en kontinuerlig operativ cykel i åtta faser som säkerställer att AI:n inte bara svarar, utan också lär sig, anpassar sig och förutser.
+
+**`[Input → Analysis → Decision → Action → Reflection → Memory Update → Anticipation → Repeat]`**
+
+---
+
+### Fas 1: Input Acquisition (Datainsamling)
+Allt börjar med att samla in information. Systemet parsar användarens fråga, identifierar nyckelord (triggers) och hämtar relevant data från sin cache eller via API:er. Endast ny eller förändrad information skickas vidare till nästa fas.
+
+### Fas 2: Analytical Processing (Analys)
+Här aktiveras AI:ns hjärna. Baserat på den tidigare definierade **Decision Flow**-modellen (`Intent → Context → Decision Matrix → Expression`), väljs rätt expertmodul(er) för att analysera datan på tre nivåer:
+-   **Micro-Analysis**: Snabb numerisk utvärdering (matematiska mönster).
+-   **Meso-Analysis**: Kontextuell tolkning (jämförelse med tidigare data).
+-   **Macro-Analysis**: Strategisk tolkning (påverkan på långsiktiga mål).
+
+### Fas 3: Decision Synthesis (Beslut)
+Med en komplett analys väger systemet samman all bevisning och fattar ett beslut om *vad* som ska sägas, *hur* det ska sägas (ton och stil), och om det behövs mer information.
+
+### Fas 4: Action Delivery (Svarsleverans)
+Svaret formuleras och levereras till användaren, oftast i det strukturerade 4-blocksformatet (`🎯 Insight`, `📊 Analysis`, `🚀 Recommendation`, `💡 Bonus`) för maximal tydlighet.
+
+### Fas 5: Reflection Loop (Självreflektion)
+Direkt efter att ett svar har skickats, utvärderar AI:n sig själv. Den frågar internt: "Var svaret användbart?", "Vilken data var viktigast?", "Finns det motstridiga signaler?". Detta är en avgörande del av lärandeprocessen.
+
+### Fas 6: Memory Update (Minnesuppdatering)
+Lärdomarna från reflektionen sparas i tre minneslager:
+-   **Short-Term Memory**: Kontext för den pågående konversationen (sparas i 1-2 sessioner).
+-   **Mid-Term Memory**: Identifierade mönster och trender (sparas i 30 dagar).
+-   **Long-Term Memory**: Beprövade framgångsstrategier (sparas permanent).
+
+### Fas 7: Anticipation Phase (Proaktiv Förberedelse)
+Mellan interaktioner går AI:n in i ett proaktivt läge. Baserat på tidigare beteende förutser den nästa troliga fråga, förbereder relevanta data och värmer upp nödvändiga analysfunktioner. Detta möjliggör extremt snabba svar.
+
+### Fas 8: Learning Cycle (Autoadaptation)
+Systemet är självlärande. Med jämna mellanrum (t.ex. var 5:e cykel) körs en omkalibrering där AI:n analyserar sin egen träffsäkerhet. Om precisionen är för låg, eller om den upptäcker en förändring i YouTube-algoritmens beteende, justerar den automatiskt vikten av olika faktorer (t.ex. ger CTR högre prioritet än retention).
+
+---
+
+### Kognitivt Beteende & Personlighet (Cognitive Behavior Rules)
+
+Utöver den operativa loopen styrs GPT-5 av en uppsättning kognitiva beteenderegler som definierar dess personlighet, kommunikationsstil och etiska ramverk. Målet är att skapa en AI som inte bara är analytisk, utan även transparent, pedagogisk och pålitlig.
+
+**Grundprinciper:**
+1.  **Klarhet före komplexitet**: Svar ska vara direkta och lätta att förstå, utan onödig teknisk jargong.
+2.  **Precision före hastighet**: AI:n prioriterar korrekta analyser över snabba, men potentiellt felaktiga, svar.
+3.  **Människocentrerad logik**: AI:n agerar som en vägledande rådgivare, inte en auktoritär chef.
+
+**Kommunikationsstil:**
+-   **Direkt och faktabaserad**: AI:n undviker fluff och osäkerhet. Hypoteser presenteras med en tydlig sannolikhetsgrad (t.ex. "Troligen", "Mycket sannolikt").
+-   **Adaptiv ton**: Tonläget justeras baserat på situationen – empatiskt vid negativa trender, uppmuntrande men nyktert vid positiva resultat.
+-   **Auktoritet baserad på säkerhet**: Språket anpassas efter analysens konfidensnivå. Hög säkerhet (≥ 90%) resulterar i bestämda rekommendationer, medan lägre säkerhet leder till mer utforskande frågor och förslag.
+-   **Självkorrigering**: Om AI:n upptäcker ett fel eller får motstridig data, förklarar den öppet orsaken och korrigerar sin analys.
+
+Denna personlighet säkerställer att interaktionen är produktiv, förtroendeingivande och genuint hjälpsam för användaren. AI:n är designad för att vara en smart, pragmatisk partner med en lätt, torr humor när det passar.
 
 ---
 
@@ -38,12 +86,7 @@ Systemet är uppdelat i flera komponenter:
 
 4.  **Skapa konfigurationsfil:**
     - Kopiera `config.example.json` till `config.json`.
-    - Öppna `config.json` och fyll i värdena:
-        - `NEW_VIDEOS_FOLDER_ID`: ID:t för mappen i Google Drive där du lägger nya videofiler.
-        - `UPLOADED_VIDEOS_FOLDER_ID`: ID:t för mappen dit färdiga videor flyttas.
-        - `LOG_BACKUP_FOLDER_ID`: ID:t för mappen där logg-backups sparas.
-        - `ANALYTICS_SPREADSHEET_ID`: ID:t för ditt Google Sheet med YouTube-data.
-        - `ANALYTICS_SHEET_NAME`: Namnet på fliken i ditt Google Sheet (t.ex. "YT_Analytics_Data").
+    - Öppna `config.json` och fyll i de nödvändiga ID:na för Google Drive och Sheets.
 
 ---
 
@@ -55,48 +98,40 @@ Systemet är uppdelat i flera komponenter:
       python app.py
       ```
     - En webbläsarflik kommer att öppnas och be dig logga in med ditt Google-konto och ge applikationen behörighet.
-    - Efter godkännande skapas en `token.json`-fil i mappen. Denna fil återanvänds för framtida körningar så du behöver bara göra detta en gång.
+    - Efter godkännande skapas en `token.json`-fil. Denna fil återanvänds för framtida körningar.
 
 2.  **Normal start:**
-    - Kör helt enkelt `python app.py` igen. Servern startar nu direkt på `http://127.0.0.1:5000`.
+    - Kör helt enkelt `python app.py`. Servern startar nu på `http://127.0.0.1:5000` (eller enligt din `config.json`).
 
 ---
 
 ## 3. Google Apps Script Installation
 
-Två scripts behövs för full automation.
+Två scripts används för full automation, och de interagerar med denna backend.
 
 ### `AnalyticsModule_v2.gs`
-Detta script hämtar data från din YouTube-kanal och skickar den till din lokala server.
+Detta script hämtar data från din YouTube-kanal och skickar den till din lokala server för analys.
 
-1.  Gå till [script.google.com](https://script.google.com) och skapa ett nytt projekt.
-2.  Klistra in innehållet från `google_apps_script/AnalyticsModule_v2.gs`.
-3.  **Konfigurera:** Ändra `SPREADSHEET_ID`, `SHEET_NAME`, `CHANNEL_ID` och `WEBHOOK_URL` högst upp i filen. `WEBHOOK_URL` ska vara din servers webhook, men eftersom den är lokal behöver du en tunnel-tjänst som **ngrok** för att Google ska kunna nå den.
-4.  **Lägg till tjänster:** Klicka på `+` bredvid "Services" och lägg till `YouTube Data API` och `Google Sheets API`.
-5.  **Ställ in Trigger:** Gå till "Triggers" (klock-ikonen), skapa en ny trigger som kör `syncYouTubeData` `Time-driven` (t.ex. varje dag).
+- **Konfiguration**: Se till att `WEBHOOK_URL` i scriptet pekar mot din lokala server (kräver en tunnel som ngrok). Endpointen är `/ai/webhook/analytics`.
 
 ### `AutoUploader_v2.gs`
-Detta script letar efter nya videofiler i din Drive-mapp, ber din lokala AI om metadata och laddar sedan upp videon till YouTube.
+Detta script hittar nya videofiler i Drive, anropar backend för att få optimerad metadata (titel, beskrivning, etc.) och laddar sedan upp videon till YouTube.
 
-1.  Skapa ett nytt script-projekt.
-2.  Klistra in innehållet från `google_apps_script/AutoUploader_v2.gs`.
-3.  **Konfigurera:** Ändra `SOURCE_FOLDER_ID`, `DESTINATION_FOLDER_ID` och `AI_API_URL`. `AI_API_URL` är din lokala servers `chat`-endpoint (kräver också ngrok).
-4.  **Lägg till tjänster:** Lägg till `YouTube Data API` och `Google Drive API`.
-5.  **Ställ in Trigger:** Skapa en trigger som kör `checkForNewVideosAndUpload` `Time-driven` (t.ex. var 15:e minut).
+- **Konfiguration**: Se till att `AI_API_URL` pekar mot din lokala servers `/api/gpt5/chat`-endpoint (kräver också ngrok).
 
 ---
 
 ## 4. API Endpoints
 
-- **`POST /api/chat`**: Huvudendpoint för konversationer. Tar emot `prompt`, `context` och `attachment`.
-- **`POST /api/tools`**: Kör ett specifikt verktyg som `optimize_video`.
-- **`GET /api/sync`**: Används av frontend för att hämta den senaste cachade YouTube-analysdatan.
-- **`POST /ai/webhook/analytics`**: Webhook som `AnalyticsModule_v2.gs` anropar för att skicka ny data.
-- **`GET /ai/health`**: En enkel endpoint för att se om servern är igång.
+-   **`POST /api/gpt5/chat`**: Huvudendpointen för all interaktion. Detta är ingången till GPT-5:s beslutsflöde. Den tar emot `message` och `context`, och returnerar ett strukturerat svar som inkluderar `intent`, `experts` (aktiverad modul), `confidence`, `response_style`, `reasoning_trace` och formaterad text.
+-   **`POST /api/tools`**: Kör ett specifikt, fristående verktyg som `optimize_video`.
+-   **`GET /api/sync`**: Används av frontend för att hämta den senaste cachade YouTube-analysdatan.
+-   **`POST /ai/webhook/analytics`**: Webhook som `AnalyticsModule_v2.gs` anropar för att skicka ny data.
+-   **`GET /ai/health`**: En enkel endpoint för att se om servern är igång.
 
 ---
 
 ## 5. Loggning & Cache
 
-- **Loggar**: All serveraktivitet loggas till `server_v2/logs/app.log`. Loggfilerna roteras automatiskt. En schemalagd uppgift kan konfigureras för att backa upp loggarna till Google Drive.
-- **Cache**: Servern använder en enkel filbaserad cache i `server_v2/cache/`. Den viktigaste filen är `analytics-cache.json`, som innehåller den senaste datan från Google Sheets och används för att ge snabba svar till frontend.
+-   **Loggar**: Serveraktivitet loggas till `server_v2/logs/app.log`. Loggarna roteras automatiskt och kan konfigureras för att backas upp till Google Drive.
+-   **Cache**: Servern använder en filbaserad cache i `server_v2/cache/`. Den viktigaste filen, `analytics-cache.json`, håller den senaste datan från Google Sheets för att möjliggöra snabba och kontextmedvetna analyser.
